@@ -1,3 +1,6 @@
+.idea/
+
+*.npz
 
 # Created by https://www.gitignore.io/api/vim,linux,emacs,python
 # Edit at https://www.gitignore.io/?templates=vim,linux,emacs,python
