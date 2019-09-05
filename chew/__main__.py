@@ -3,7 +3,7 @@ import sys
 
 from logzero import logger
 
-from . import compare, fingerprint
+from . import compare, fingerprint, stats
 
 
 def main(argv=None):
@@ -28,8 +28,19 @@ def main(argv=None):
 
     parser_compare = subparser.add_parser("compare")
     parser_compare.add_argument(
+        "--output-prefix", default="chew-comparison", help="Path to comparison file."
+    )
+    parser_compare.add_argument(
         "fingerprints", nargs="+", help="Path(s) to .fingerprint.npz files to compare."
     )
+    parser_compare.add_argument("--min-mask-ones", type=int, help="Minimal number of ones in mask.")
+    parser_compare.add_argument("--max-mask-ones", type=int, help="Maximal number of ones in mask.")
+
+    parser_stats = subparser.add_parser("stats")
+    parser_stats.add_argument(
+        "fingerprints", nargs="+", help="Path(s) to .fingerprint.npz to show stats for."
+    )
+    parser_stats.add_argument("--output", default="chew-stats.txt", help="Path to stats file.")
 
     args = parser.parse_args(argv)
     logger.info("Options: %s" % vars(args))
@@ -37,6 +48,8 @@ def main(argv=None):
         return fingerprint.run(args)
     elif args.command == "compare":
         return compare.run(args)
+    elif args.command == "stats":
+        return stats.run(args)
     else:
         parser.error("No command given!")
 
