@@ -4,10 +4,13 @@ import sys
 from logzero import logger
 
 from . import compare, fingerprint, stats
+from chew import __version__
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser()
+    parser.add_argument("--version", action="version", version="%(prog)s {}".format(__version__))
+
     subparser = parser.add_subparsers(dest="command")
 
     parser_fingerprint = subparser.add_parser("fingerprint")
