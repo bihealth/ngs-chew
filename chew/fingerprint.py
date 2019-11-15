@@ -89,7 +89,7 @@ def vcf_to_fingerprint(args, prefix, genome_release, path_calls):
 
 
 def write_fingerprint(args, genome_release, sample, fingerprint):
-    logger.info("Writing fingerprint to %s...", args.output_fingerprint)
+    logger.info("Writing fingerprint to %s.npz ...", args.output_fingerprint)
     header = np.array(
         [
             "ngs_chew_fingerprint",  # file identifier

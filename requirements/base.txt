@@ -1,0 +1,5 @@
+logzero
+tqdm
+numpy
+vcfpy
+pysam
