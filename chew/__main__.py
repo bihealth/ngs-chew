@@ -3,7 +3,7 @@ import sys
 
 from logzero import logger
 
-from . import compare, fingerprint, stats
+from . import compare, fingerprint, stats, plot_compare
 from chew import __version__
 
 
@@ -45,6 +45,13 @@ def main(argv=None):
     )
     parser_stats.add_argument("--output", default="chew-stats.txt", help="Path to stats file.")
 
+    parser_plot_compare = subparser.add_parser("plot_compare")
+    parser_plot_compare.add_argument("stats", help="Path to `-stats.txt` file.")
+    parser_plot_compare.add_argument("out_html", help="Path to output HTML file.")
+    parser_plot_compare.add_argument(
+        "--title", default="NGS Chew Comparison Plot", help="Title to use for the output HTML file."
+    )
+
     args = parser.parse_args(argv)
     logger.info("Options: %s" % vars(args))
     if args.command == "fingerprint":
@@ -53,6 +60,8 @@ def main(argv=None):
         return compare.run(args)
     elif args.command == "stats":
         return stats.run(args)
+    elif args.command == "plot_compare":
+        return plot_compare.run(args)
     else:
         parser.error("No command given!")
 
