@@ -5,3 +5,4 @@ vcfpy
 pysam
 pandas
 plotly
+scipy

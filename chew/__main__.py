@@ -3,7 +3,7 @@ import sys
 
 from logzero import logger
 
-from . import compare, fingerprint, stats, plot_compare
+from . import compare, fingerprint, stats, plot_compare, plot_aab
 from chew import __version__
 
 
@@ -23,10 +23,16 @@ def main(argv=None):
         required=True,
         help="Path to output .npz file (extension .npz is added automatically if necessary).",
     )
-    parser_fingerprint.add_argument("--input-bam", required=True, help="Path to input .bam file.")
+    parser_fingerprint.add_argument("--input-bam", required=True, help="Path to input .bam file")
     parser_fingerprint.add_argument("--genome-release", required=False, help="Force genome release")
     parser_fingerprint.add_argument(
         "--max-sites", default=0, type=int, help="Optional, maximal number of sites to consider"
+    )
+    parser_fingerprint.add_argument(
+        "--write-vcf",
+        default=False,
+        action="store_true",
+        help="Write out the VCF file created during fingerprinting",
     )
 
     parser_compare = subparser.add_parser("compare")
@@ -52,6 +58,14 @@ def main(argv=None):
         "--title", default="NGS Chew Comparison Plot", help="Title to use for the output HTML file."
     )
 
+    parser_plot_aab = subparser.add_parser("plot_aab")
+    parser_plot_aab.add_argument("out_html", help="Path to output HTML file.")
+    parser_plot_aab.add_argument("vcf", nargs="+", help="Path(s) to input VCF files.")
+    parser_plot_aab.add_argument(
+        "--title", default="NGS Chew Comparison Plot", help="Title to use for the output HTML file."
+    )
+    parser_plot_aab.add_argument("--aab-cache", help="Path to AAB cache JSON file.")
+
     args = parser.parse_args(argv)
     logger.info("Options: %s" % vars(args))
     if args.command == "fingerprint":
@@ -62,6 +76,8 @@ def main(argv=None):
         return stats.run(args)
     elif args.command == "plot_compare":
         return plot_compare.run(args)
+    elif args.command == "plot_aab":
+        return plot_aab.run(args)
     else:
         parser.error("No command given!")
 

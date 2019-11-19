@@ -1,3 +1,4 @@
+import contextlib
 import gzip
 import os
 import shlex
@@ -15,7 +16,7 @@ RELEASE_37 = "GRCh37"
 RELEASE_38 = "GRCh38"
 
 #: Template for creating ``bcftools mpileup`` call.
-TPL_PILEUP = r"bcftools mpileup --threads 2 -I -R %(sites)s -f %(reference)s %(input_bam)s"
+TPL_PILEUP = r"bcftools mpileup -a AD,DP --threads 2 -I -R %(sites)s -f %(reference)s %(input_bam)s"
 
 #: Template for creating ``bcftools call`` call.
 TPL_CALL = r"bcftools call -c -Oz -o %(calls)s"
@@ -60,7 +61,7 @@ def call_sites(args, path_sites, tmp_dir):
     return path_vcf
 
 
-def vcf_to_fingerprint(args, prefix, genome_release, path_calls):
+def vcf_to_fingerprint(args, prefix, genome_release, path_calls, prefix_fingerprint):
     logger.info("Reading sites BED...")
     path_gz = os.path.join(os.path.dirname(__file__), "data", "%s_sites.bed.gz" % genome_release)
     with gzip.open(path_gz, "rt") as inputf:
@@ -70,11 +71,20 @@ def vcf_to_fingerprint(args, prefix, genome_release, path_calls):
             sites["%s%s:%s" % (prefix, arr[0], int(arr[1]) + 1)] = (0, 0)
     logger.info("Converting VCF to fingerprint...")
     with vcfpy.Reader.from_path(path_calls) as vcf_reader:
-        sample = vcf_reader.header.samples.names[0]
-        for record in vcf_reader:
-            key = "%s%s:%s" % (prefix, record.CHROM, record.POS)
-            if key in sites:
-                sites[key] = (record.INFO["DP"], record.call_for_sample[sample].gt_type)
+        if prefix_fingerprint:
+            logger.info("Writing VCF to %s", prefix_fingerprint + ".vcf.gz")
+            out_vcf = vcfpy.Writer.from_path(prefix_fingerprint + ".vcf.gz", vcf_reader.header)
+        else:
+            logger.info("Not writing out VCF")
+            out_vcf = contextlib.suppress()
+        with out_vcf as vcf_writer:
+            sample = vcf_reader.header.samples.names[0]
+            for record in vcf_reader:
+                if prefix_fingerprint:
+                    vcf_writer.write_record(record)
+                key = "%s%s:%s" % (prefix, record.CHROM, record.POS)
+                if key in sites:
+                    sites[key] = (record.INFO["DP"], record.call_for_sample[sample].gt_type)
     depths = [dp for dp, _ in sites.values()]
     genotypes = [gt for _, gt in sites.values()]
     fingerprint = np.array(
@@ -107,6 +117,12 @@ def run(args):
         prefix, genome_release = guess_release(args.input_bam, args.genome_release)
         path_sites = write_sites_bed(args, prefix, genome_release, tmp_dir)
         path_calls = call_sites(args, path_sites, tmp_dir)
-        sample, fingerprint = vcf_to_fingerprint(args, prefix, genome_release, path_calls)
+        sample, fingerprint = vcf_to_fingerprint(
+            args,
+            prefix,
+            genome_release,
+            path_calls,
+            args.output_fingerprint if args.write_vcf else None,
+        )
         write_fingerprint(args, genome_release, sample, fingerprint)
     logger.info("All done. Have a nice day!")

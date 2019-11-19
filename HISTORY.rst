@@ -3,6 +3,13 @@ CHANGELOG
 =========
 
 ------
+v0.3.0
+------
+
+- Adding option for writing out VCF file in fingerprinting.
+- Adding command ``plot_aab`` command for visualizing B allele frequency from VCF files.
+
+------
 v0.2.0
 ------
 
