@@ -3,7 +3,7 @@ import sys
 
 from logzero import logger
 
-from . import compare, fingerprint, stats, plot_compare, plot_aab
+from . import compare, fingerprint, stats, plot_compare, plot_aab, plot_var_het
 from chew import __version__
 
 
@@ -66,6 +66,14 @@ def main(argv=None):
     )
     parser_plot_aab.add_argument("--aab-cache", help="Path to AAB cache JSON file.")
 
+    parser_plot_var_het = subparser.add_parser("plot_var_het")
+    parser_plot_var_het.add_argument("out_html", help="Path to output HTML file.")
+    parser_plot_var_het.add_argument("vcf", nargs="+", help="Path(s) to input VCF files.")
+    parser_plot_var_het.add_argument(
+        "--title", default="NGS Chew Comparison Plot", help="Title to use for the output HTML file."
+    )
+    parser_plot_var_het.add_argument("--var_het_cache", help="Path to AAB cache JSON file.")
+
     args = parser.parse_args(argv)
     logger.info("Options: %s" % vars(args))
     if args.command == "fingerprint":
@@ -78,6 +86,8 @@ def main(argv=None):
         return plot_compare.run(args)
     elif args.command == "plot_aab":
         return plot_aab.run(args)
+    elif args.command == "plot_var_het":
+        return plot_var_het.run(args)
     else:
         parser.error("No command given!")
 
