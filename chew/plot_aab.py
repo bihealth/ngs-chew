@@ -22,7 +22,7 @@ def load_aabs(args):
             for record in vcf_reader:
                 key = "%s:%s" % (record.CHROM, record.POS)
                 for call in record.calls:
-                    if sum(call.data["AD"]):
+                    if sum(call.data.get("AD", [0])):
                         aabs[call.sample][key] = call.data["AD"][0] / sum(call.data["AD"])
                     else:
                         aabs[call.sample][key] = 0
@@ -53,8 +53,9 @@ def run(args):
         logger.info("Collecting AABs")
         aabs = load_aabs(args)
         logger.info("Writing AABs to %s", args.aab_cache)
-        with open(args.aab_cache, "wt") as outputf:
-            json.dump(aabs, outputf)
+        if args.aab_cache:
+            with open(args.aab_cache, "wt") as outputf:
+                json.dump(aabs, outputf)
 
     logger.info("Preparing plot...")
     df = pd.DataFrame.from_dict(aabs)

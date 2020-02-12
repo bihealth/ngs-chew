@@ -23,7 +23,7 @@ def load_het_aabs(args):
                 key = "%s:%s" % (record.CHROM, record.POS)
                 for call in record.calls:
                     if call.data['GT'].replace('|', '/') in ('0/1', '1/0'):
-                        if sum(call.data["AD"]):
+                        if sum(call.data.get("AD", [0])):
                             het_aabs[call.sample][key] = call.data["AD"][0] / sum(call.data["AD"])
                         else:
                             het_aabs[call.sample][key] = 0
@@ -42,8 +42,9 @@ def run(args):
         logger.info("Collecting AABs")
         het_aabs = load_het_aabs(args)
         logger.info("Writing AABs to %s", args.var_het_cache)
-        with open(args.var_het_cache, "wt") as outputf:
-            json.dump(het_aabs, outputf)
+        if args.var_het_cache:
+            with open(args.var_het_cache, "wt") as outputf:
+                json.dump(het_aabs, outputf)
 
     logger.info("Preparing plot...")
     df = pd.DataFrame.from_dict(het_aabs)
