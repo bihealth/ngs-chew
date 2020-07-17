@@ -112,6 +112,8 @@ def write_fingerprint(args, genome_release, sample, fingerprint):
 
 
 def run(args):
+    if args.output_fingerprint.endswith(".npz"):
+        args.output_fingerprint = args.output_fingerprint[: -len(".npz")]
     logger.info("Chewing NGS at %s", args.input_bam)
     with tempfile.TemporaryDirectory() as tmp_dir:
         prefix, genome_release = guess_release(args.input_bam, args.genome_release)

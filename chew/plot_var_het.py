@@ -22,7 +22,7 @@ def load_het_aabs(args):
             for record in vcf_reader:
                 key = "%s:%s" % (record.CHROM, record.POS)
                 for call in record.calls:
-                    if call.data['GT'].replace('|', '/') in ('0/1', '1/0'):
+                    if call.data["GT"].replace("|", "/") in ("0/1", "1/0"):
                         if sum(call.data.get("AD", [0])):
                             het_aabs[call.sample][key] = call.data["AD"][0] / sum(call.data["AD"])
                         else:
