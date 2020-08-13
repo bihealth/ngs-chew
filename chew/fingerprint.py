@@ -1,6 +1,7 @@
 import contextlib
 import gzip
 import os
+import pathlib
 import shlex
 import subprocess
 import tempfile
@@ -9,42 +10,13 @@ from logzero import logger
 import numpy as np
 import vcfpy
 
-#: Key to use for GRCh37 release.
-RELEASE_37 = "GRCh37"
-
-#: Key to use for GRCh38 release.
-RELEASE_38 = "GRCh38"
+from .common import guess_release_bam, write_sites_bed
 
 #: Template for creating ``bcftools mpileup`` call.
 TPL_PILEUP = r"bcftools mpileup -a AD,DP --threads 2 -I -R %(sites)s -f %(reference)s %(input_bam)s"
 
 #: Template for creating ``bcftools call`` call.
 TPL_CALL = r"bcftools call -c -Oz -o %(calls)s"
-
-
-def guess_release(input_bam, genome_release=None):
-    prefix = ""
-    if genome_release:
-        logger.info("Using genome release %s", genome_release)
-        return prefix, genome_release
-    else:
-        genome_release = "GRCh37"  # TODO: actually implement!
-        logger.info("Guessing genome release to be %s", genome_release)
-        return prefix, genome_release
-
-
-def write_sites_bed(args, prefix, genome_release, tmp_dir):
-    path_gz = os.path.join(os.path.dirname(__file__), "data", "%s_sites.bed.gz" % genome_release)
-    path_bed = os.path.join(tmp_dir, "sites.bed")
-    logger.info("Writing sites BED file to %s", path_bed)
-    # TODO: handle "chr" prefix...
-    with gzip.open(path_gz, "rt") as inputf:
-        with open(path_bed, "wt") as outputf:
-            for lineno, line in enumerate(inputf):
-                if not args.max_sites or lineno < args.max_sites:
-                    print("%s%s" % (prefix, line.strip()), file=outputf)
-    logger.info("Wrote %s sites", "{:,}".format(lineno))
-    return path_bed
 
 
 def call_sites(args, path_sites, tmp_dir):
@@ -63,8 +35,13 @@ def call_sites(args, path_sites, tmp_dir):
 
 def vcf_to_fingerprint(args, prefix, genome_release, path_calls, prefix_fingerprint):
     logger.info("Reading sites BED...")
-    path_gz = os.path.join(os.path.dirname(__file__), "data", "%s_sites.bed.gz" % genome_release)
-    with gzip.open(path_gz, "rt") as inputf:
+    if args.sites_bed:
+        path_bed = args.sites_bed
+        fn_open = gzip.open if path_bed.endswith(".gz") else open
+    else:
+        path_bed = os.path.join(os.path.dirname(__file__), "data", "%s_sites.bed.gz" % genome_release)
+        fn_open = gzip.open
+    with fn_open(path_bed, "rt") as inputf:
         sites = {}
         for line in inputf:
             arr = line.strip().split("\t")
@@ -115,8 +92,11 @@ def run(args):
     if args.output_fingerprint.endswith(".npz"):
         args.output_fingerprint = args.output_fingerprint[: -len(".npz")]
     logger.info("Chewing NGS at %s", args.input_bam)
+    if not (pathlib.Path(args.reference) / ".fai").exists():
+        logger.error("FAI file for %s does not exit!", args.reference))
+        return 1
     with tempfile.TemporaryDirectory() as tmp_dir:
-        prefix, genome_release = guess_release(args.input_bam, args.genome_release)
+        prefix, genome_release = guess_release_bam(args.input_bam, args.genome_release)
         path_sites = write_sites_bed(args, prefix, genome_release, tmp_dir)
         path_calls = call_sites(args, path_sites, tmp_dir)
         sample, fingerprint = vcf_to_fingerprint(

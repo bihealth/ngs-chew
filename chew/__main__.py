@@ -3,8 +3,11 @@ import sys
 
 from logzero import logger
 
-from . import compare, fingerprint, stats, plot_compare, plot_aab, plot_var_het
+from . import compare, fingerprint, kmers, stats, plot_compare, plot_aab, plot_var_het
 from chew import __version__
+
+#: Default k-mer length.
+DEFAULT_KMER_LENGTH = 21
 
 
 def main(argv=None):
@@ -13,7 +16,14 @@ def main(argv=None):
 
     subparser = parser.add_subparsers(dest="command")
 
+    parser_kmers = subparser.add_parser("kmers")
+    parser_kmers.add_argument("--kmer-length", type=int, default=DEFAULT_KMER_LENGTH, help="(Uneven) k-mer length to use, default: %d." % DEFAULT_KMER_LENGTH)
+    parser_kmers.add_argument("--reference", required=True, help="Path to FAI-indexed FASTA file.")
+    parser_kmers.add_argument("--output-kmers", required=True, help="Path to output kmers file.")
+    parser_fingerprint.add_argument("--sites-vcf", required=False, help="Optional path to (optionally gziped) VCF file with sites to sample from.")
+
     parser_fingerprint = subparser.add_parser("fingerprint")
+    parser_fingerprint.add_argument("--sites-vcf", required=False, help="Optional path to (optionally gziped) VCF file with sites to sample from.")
     parser_fingerprint.add_argument("--min-coverage", default=5, help="Minimal required coverage")
     parser_fingerprint.add_argument(
         "--reference", required=True, help="Path to reference FASTA file."
@@ -76,7 +86,9 @@ def main(argv=None):
 
     args = parser.parse_args(argv)
     logger.info("Options: %s" % vars(args))
-    if args.command == "fingerprint":
+    if args.command == "kmers":
+        return kmers.run(args)
+    elif args.command == "fingerprint":
         return fingerprint.run(args)
     elif args.command == "compare":
         return compare.run(args)

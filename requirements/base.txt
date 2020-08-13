@@ -1,8 +1,9 @@
 logzero
-tqdm
 numpy
-vcfpy
 pysam
 pandas
 plotly
 scipy
+tqdm
+vcfpy
+attrs
