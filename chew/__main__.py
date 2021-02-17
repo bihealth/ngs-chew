@@ -92,5 +92,5 @@ def main(argv=None):
         parser.error("No command given!")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: nocover
     sys.exit(main())

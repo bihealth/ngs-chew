@@ -1,13 +1,32 @@
 import math
 
+import attr
 import numpy as np
 from logzero import logger
 from tqdm import tqdm
 
 
+@attr.s(frozen=True, auto_attribs=True)
+class Fingerprint:
+    """Store information from a fingerprint file."""
+
+    #: Genome release
+    genome_release: str
+    #: Name of the sample
+    sample_name: str
+    #: Genotype array for fingeprint
+    genotypes: np.array
+    #: Allelic fraction array
+    # ab: np.array
+
+
 def load_fingerprint(path):
     nparr = np.load(path)
-    return nparr["header"][3], nparr["fingerprint"]
+    return Fingerprint(
+        genome_release=nparr["header"][2],
+        sample_name=nparr["header"][3],
+        genotypes=nparr["fingerprint"],
+    )
 
 
 def relatedness(lhs, rhs):
