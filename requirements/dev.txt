@@ -1,1 +1,1 @@
-black
+-r test_black.txt

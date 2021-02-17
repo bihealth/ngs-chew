@@ -36,7 +36,7 @@ def load_aabs(args):
 
     for mapping in aabs.values():
         for key in list(mapping.keys()):
-            if not key in keys:
+            if key not in keys:
                 del mapping[key]
 
     return aabs
@@ -61,7 +61,6 @@ def run(args):
     df = pd.DataFrame.from_dict(aabs)
 
     plot_data = {"sample": [], "bin": [], "count": []}
-    xs = list(np.histogram(df[df.columns[0]], 50, (0.0, 1.0))[1])
     for c in df.columns:
         hist = np.histogram(df[c], 50, (0.0, 1.0))
         plot_data["count"] += hist[0].tolist()

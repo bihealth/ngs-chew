@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Installation driver (and development utility entry point) for digestiflow_demux
+"""Installation driver (and development utility entry point) for ngs-chew
 """
 
 import os

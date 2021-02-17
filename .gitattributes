@@ -1,3 +1,4 @@
 tests/data/*.fa filter=lfs diff=lfs merge=lfs -text
 tests/data/*.bam filter=lfs diff=lfs merge=lfs -text
 tests/data/*.bam.bai filter=lfs diff=lfs merge=lfs -text
+tests/data/*.npz filter=lfs diff=lfs merge=lfs -text
