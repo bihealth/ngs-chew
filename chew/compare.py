@@ -17,6 +17,7 @@ class Fingerprint:
     #: Genotype array for fingeprint
     genotypes: np.array
     #: Allelic fraction array
+    allelic_fraction: np.array
     # ab: np.array
 
 
@@ -26,6 +27,7 @@ def load_fingerprint(path):
         genome_release=nparr["header"][2],
         sample_name=nparr["header"][3],
         genotypes=nparr["fingerprint"],
+        allelic_fraction=nparr["allelic_fraction"],
     )
 
 
