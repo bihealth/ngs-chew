@@ -5,9 +5,13 @@ import shlex
 import subprocess
 import tempfile
 
+from bitarray import bitarray
+
 from logzero import logger
 import numpy as np
 import vcfpy
+
+from . import compare
 
 #: Key to use for GRCh37 release.
 RELEASE_37 = "GRCh37"
@@ -68,7 +72,7 @@ def vcf_to_fingerprint(args, prefix, genome_release, path_calls, prefix_fingerpr
         sites = {}
         for line in inputf:
             arr = line.strip().split("\t")
-            sites["%s%s:%s" % (prefix, arr[0], int(arr[1]) + 1)] = (0, 0)
+            sites["%s%s:%s" % (prefix, arr[0], int(arr[1]) + 1)] = (0, 0, 0)
     logger.info("Converting VCF to fingerprint...")
     with vcfpy.Reader.from_path(path_calls) as vcf_reader:
         if prefix_fingerprint:
@@ -84,12 +88,20 @@ def vcf_to_fingerprint(args, prefix, genome_release, path_calls, prefix_fingerpr
                     vcf_writer.write_record(record)
                 key = "%s%s:%s" % (prefix, record.CHROM, record.POS)
                 if key in sites:
-                    sites[key] = (record.INFO["DP"], record.call_for_sample[sample].gt_type)
-    depths = [dp for dp, _ in sites.values()]
-    genotypes = [gt for _, gt in sites.values()]
+                    sites[key] = (record.INFO["DP"], record.call_for_sample[sample].gt_type, sum(record.call_for_sample[sample].data['AD']))
+    depths = [dp for dp,_,_ in sites.values()]
+    genotypes = [gt for _,gt,_ in sites.values()]
+    allelic_depth = [ad for _,_,ad in sites.values()]
+    print("DEBUG::", len(depths))
+#    fingerprint = np.array(
+#        [
+#            compare.Fingerprint()
+#        ],
+#        dtype=compare.Fingerprint,
+#    )
     fingerprint = np.array(
         [
-            [dp > args.min_coverage for dp in depths],
+            [dp > int(args.min_coverage) for dp in depths],
             [gt != vcfpy.HOM_REF for gt in genotypes],
             [gt == vcfpy.HOM_ALT for gt in genotypes],
         ],

@@ -9,26 +9,71 @@ from tqdm import tqdm
 @attr.s(frozen=True, auto_attribs=True)
 class Fingerprint:
     """Store information from a fingerprint file."""
-
+    DTYPE = np.uint16
     #: Genome release
     genome_release: str
     #: Name of the sample
     sample_name: str
-    #: Genotype array for fingeprint
-    genotypes: np.array
+    #: Genotype:  array for fingeprint
+    data: np.array
     #: Allelic fraction array
-    allelic_fraction: np.array
-    # ab: np.array
+
+    def maxval_to_frac(self,val):
+        bits = t = np.iinfo(self.DTYPE).bits -3
+        return float(2**(bits)-1 & val) / float(2**(bits)-1)
+
+    def frac_to_maxval(self,frac:float):
+        bits = t = np.iinfo(self.DTYPE).bits -3
+        return round(frac * (2**bits-1))
+
+    def get_bit(self,v,k:int):
+        t = np.iinfo(self.DTYPE).bits
+        if 0 <= k < t:
+            return type(v)((v & 2**(t-k-1)) >> (t-k-1))
+        else:
+            raise ValueError("k must be 0 <= k < t")
+
+    def set_bit(self,v,k:int,x=True):
+        t = np.iinfo(self.DTYPE).bits
+        if 0 <= k < t:
+            return type(v)(2**(t-k-1) | v) if x else type(v)(~2**(t-k-1) & v)
+        else:
+            raise ValueError("k must be 0 <= k < t")
+
+    def __init__(self,sample_name:str,genome_release:str,mask,is_alt,hom_alt,al_frac,dtype=np.uint16):
+        self.DTYPE = dtype
+        if not (len(mask) == len(is_alt) == len(hom_alt) == len(al_frac)):
+            raise ValueError("All given lists or vectors must have the same length.")
+        if al_frac.min() < 0 or al_frac.max() > 1.0:
+            raise ValueError("Allelic fractions x must satisfy 0 <= x <= 1.")
+        self.data = np.vectorize(self.frac_to_maxval,otypes=[self.DTYPE])(al_frac)
+        self.data = np.vectorize(self.set_bit,otypes=[self.DTYPE])(self.data,2,hom_alt)
+        self.data = np.vectorize(self.set_bit,otypes=[self.DTYPE])(self.data,1,is_alt)
+        self.data = np.vectorize(self.set_bit,otypes=[self.DTYPE])(self.data,0,mask)
+        self.genome_release = genome_release
+        self.sample_name = sample_name
+
+    def __getitem__(self, key:int):
+        if key == 3:
+            return np.vectorize(self.maxval_to_frac)(self.data).astype(float)
+        if key >= 0:
+            return np.vectorize(self.get_bit)(self.data,key).astype(bool)
+        raise ValueError("Index must be %d or smaller"%3)
 
 
 def load_fingerprint(path):
     nparr = np.load(path)
+    print("DEBUG::",nparr["header"][3],nparr["fingerprint"])
+    return nparr["header"][3], nparr["fingerprint"]
+    """
+    nparr = np.load(path)
     return Fingerprint(
         genome_release=nparr["header"][2],
         sample_name=nparr["header"][3],
-        genotypes=nparr["fingerprint"],
-        allelic_fraction=nparr["allelic_fraction"],
+        genotypes=nparr["fingerprint"]
+        #allelic_fraction=nparr["allelic_fraction"]
     )
+    """
 
 
 def relatedness(lhs, rhs):
