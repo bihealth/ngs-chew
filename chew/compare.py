@@ -9,7 +9,7 @@ from tqdm import tqdm
 @attr.s(frozen=True, auto_attribs=True)
 class Fingerprint:
     """Store information from a fingerprint file."""
-    DTYPE = np.uint16
+    DTYPE: type
     #: Genome release
     genome_release: str
     #: Name of the sample
@@ -58,23 +58,12 @@ class Fingerprint:
             return np.vectorize(self.maxval_to_frac)(self.data).astype(float)
         if key >= 0:
             return np.vectorize(self.get_bit)(self.data,key).astype(bool)
-        raise ValueError("Index must be %d or smaller"%3)
+        raise ValueError("Index i must satisfy 0 <= i <= %d."%3)
 
 
 def load_fingerprint(path):
     nparr = np.load(path)
-    print("DEBUG::",nparr["header"][3],nparr["fingerprint"])
     return nparr["header"][3], nparr["fingerprint"]
-    """
-    nparr = np.load(path)
-    return Fingerprint(
-        genome_release=nparr["header"][2],
-        sample_name=nparr["header"][3],
-        genotypes=nparr["fingerprint"]
-        #allelic_fraction=nparr["allelic_fraction"]
-    )
-    """
-
 
 def relatedness(lhs, rhs):
     # Obtain shortcuts...
