@@ -16,7 +16,7 @@ RELEASE_37 = "GRCh37"
 RELEASE_38 = "GRCh38"
 
 #: Template for creating ``bcftools mpileup`` call.
-TPL_PILEUP = r"bcftools mpileup -a AD,DP --threads 2 -I -R %(sites)s -f %(reference)s %(input_bam)s"
+TPL_PILEUP = r"bcftools mpileup -a AD,DP --threads 2 -I -R %(sites)s -f %(reference)s %(input_bam)s" # can't we use AF directly?
 
 #: Template for creating ``bcftools call`` call.
 TPL_CALL = r"bcftools call -c -Oz -o %(calls)s"
@@ -84,10 +84,9 @@ def vcf_to_fingerprint(args, prefix, genome_release, path_calls, prefix_fingerpr
                     vcf_writer.write_record(record)
                 key = "%s%s:%s" % (prefix, record.CHROM, record.POS)
                 if key in sites:
-                    sites[key] = (record.INFO["DP"], record.call_for_sample[sample].gt_type, record.INFO['AD'])
-    depths =    [dp for dp,_,_ in sites.values()]
-    genotypes = [gt for _,gt,_ in sites.values()]
-    adepths = [af for _,_,af in sites.values()]
+                    sites[key] = (record.INFO["DP"], record.call_for_sample[sample].gt_type)
+    depths = [dp for dp, _ in sites.values()]
+    genotypes = [gt for _, gt in sites.values()]
     fingerprint = np.array(
         [
             [dp > args.min_coverage for dp in depths],
@@ -96,11 +95,10 @@ def vcf_to_fingerprint(args, prefix, genome_release, path_calls, prefix_fingerpr
         ],
         dtype=bool,
     )
-    allelic_fraction = np.array([round(10000*ad/dp) for dp,ad in zip(depths,adepths)],dtype='uint16')
-    return sample, fingerprint, allelic_fraction
+    return sample, fingerprint
 
 
-def write_fingerprint(args, genome_release, sample, fingerprint, allelic_fraction):
+def write_fingerprint(args, genome_release, sample, fingerprint):
     logger.info("Writing fingerprint to %s.npz ...", args.output_fingerprint)
     header = np.array(
         [
@@ -110,7 +108,7 @@ def write_fingerprint(args, genome_release, sample, fingerprint, allelic_fractio
             sample,  # sample name
         ]
     )
-    np.savez_compressed(args.output_fingerprint, header=header, fingerprint=fingerprint, allelic_fraction=allelic_fraction)
+    np.savez_compressed(args.output_fingerprint, header=header, fingerprint=fingerprint)
 
 
 def run(args):
@@ -121,12 +119,12 @@ def run(args):
         prefix, genome_release = guess_release(args.input_bam, args.genome_release)
         path_sites = write_sites_bed(args, prefix, genome_release, tmp_dir)
         path_calls = call_sites(args, path_sites, tmp_dir)
-        sample, fingerprint, allelic_fraction = vcf_to_fingerprint(
+        sample, fingerprint = vcf_to_fingerprint(
             args,
             prefix,
             genome_release,
             path_calls,
             args.output_fingerprint if args.write_vcf else None,
         )
-        write_fingerprint(args, genome_release, sample, fingerprint, allelic_fraction)
+        write_fingerprint(args, genome_release, sample, fingerprint)
     logger.info("All done. Have a nice day!")
