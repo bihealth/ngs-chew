@@ -6,6 +6,7 @@ from logzero import logger
 from tqdm import tqdm
 
 
+#re-work
 @attr.s(frozen=True, auto_attribs=True)
 class Fingerprint:
     """Store information from a fingerprint file."""

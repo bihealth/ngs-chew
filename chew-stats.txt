@@ -1,0 +1,1 @@
+sample	hets	hom_alts	hom_refs	mask
