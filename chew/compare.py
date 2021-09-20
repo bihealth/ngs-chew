@@ -64,7 +64,7 @@ class Fingerprint:
 
 def load_fingerprint(path):
     nparr = np.load(path)
-    return nparr["header"][3], nparr["fingerprint"]
+    return nparr["header"][3], nparr["fingerprint"], nparr["allelic_fractions"]
 
 def relatedness(lhs, rhs):
     # Obtain shortcuts...
@@ -94,7 +94,7 @@ def relatedness(lhs, rhs):
 def run(args):
     logger.info("Loading fingerprints...")
     fps = {
-        name: fingerprint for name, fingerprint in map(load_fingerprint, tqdm(args.fingerprints))
+        name: fingerprint for name, fingerprint, allelic_fractions in map(load_fingerprint, tqdm(args.fingerprints))
     }
     logger.info("Loaded %d fingerprints", len(fps))
     if args.min_mask_ones or args.max_mask_ones:

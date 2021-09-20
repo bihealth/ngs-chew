@@ -1,0 +1,2 @@
+sample	hets	hom_alts	hom_refs	mask	mean_af
+HG00102-N1-DNA1-WES1	1	1	0	1	0.0
