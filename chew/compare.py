@@ -5,6 +5,7 @@ import numpy as np
 from logzero import logger
 from tqdm import tqdm
 
+from .fingerprint import load_fingerprints
 
 #re-work
 @attr.s(frozen=True, auto_attribs=True)
@@ -61,11 +62,6 @@ class Fingerprint:
             return np.vectorize(self.get_bit)(self.data,key).astype(bool)
         raise ValueError("Index i must satisfy 0 <= i <= %d."%3)
 
-
-def load_fingerprint(path):
-    nparr = np.load(path)
-    return nparr["header"][3], nparr["fingerprint"], nparr["allelic_fractions"]
-
 def relatedness(lhs, rhs):
     # Obtain shortcuts...
     lhs_mask = lhs[0]
@@ -92,15 +88,11 @@ def relatedness(lhs, rhs):
 
 
 def run(args):
-    logger.info("Loading fingerprints...")
-    fps = {
-        name: fingerprint for name, fingerprint, allelic_fractions in map(load_fingerprint, tqdm(args.fingerprints))
-    }
-    logger.info("Loaded %d fingerprints", len(fps))
+    fps = load_fingerprints(args.fingerprints)
     if args.min_mask_ones or args.max_mask_ones:
         fps = {
             name: fp
-            for name, fp in fps.items()
+            for name, (fp,af) in fps.items()
             if (not args.min_mask_ones or np.count_nonzero(fp[0]) >= args.min_mask_ones)
             and (not args.max_mask_ones or np.count_nonzero(fp[0]) <= args.max_mask_ones)
         }

@@ -13,6 +13,8 @@ def main(argv=None):
 
     subparser = parser.add_subparsers(dest="command")
 
+    # -------------------------------------------------------------------------
+    #  parser_fingerprint
     parser_fingerprint = subparser.add_parser("fingerprint")
     parser_fingerprint.add_argument("--min-coverage", default=5, help="Minimal required coverage")
     parser_fingerprint.add_argument(
@@ -35,6 +37,8 @@ def main(argv=None):
         help="Write out the VCF file created during fingerprinting",
     )
 
+    # -------------------------------------------------------------------------
+    #  parser_compare
     parser_compare = subparser.add_parser("compare")
     parser_compare.add_argument(
         "--output-prefix", default="chew-comparison", help="Path to comparison file."
@@ -45,12 +49,16 @@ def main(argv=None):
     parser_compare.add_argument("--min-mask-ones", type=int, help="Minimal number of ones in mask.")
     parser_compare.add_argument("--max-mask-ones", type=int, help="Maximal number of ones in mask.")
 
+    # -------------------------------------------------------------------------
+    #  parser_stats
     parser_stats = subparser.add_parser("stats")
     parser_stats.add_argument(
         "fingerprints", nargs="+", help="Path(s) to .fingerprint.npz to show stats for."
     )
     parser_stats.add_argument("--output", default="chew-stats.txt", help="Path to stats file.")
 
+    # -------------------------------------------------------------------------
+    #  parser_plot_compare
     parser_plot_compare = subparser.add_parser("plot_compare")
     parser_plot_compare.add_argument("stats", help="Path to `-stats.txt` file.")
     parser_plot_compare.add_argument("out_html", help="Path to output HTML file.")
@@ -58,6 +66,8 @@ def main(argv=None):
         "--title", default="NGS Chew Comparison Plot", help="Title to use for the output HTML file."
     )
 
+    # -------------------------------------------------------------------------
+    #  parser_plot_aab
     parser_plot_aab = subparser.add_parser("plot_aab")
     parser_plot_aab.add_argument("out_html", help="Path to output HTML file.")
     parser_plot_aab.add_argument("vcf", nargs="+", help="Path(s) to input VCF files.")
@@ -66,13 +76,16 @@ def main(argv=None):
     )
     parser_plot_aab.add_argument("--aab-cache", help="Path to AAB cache JSON file.")
 
+    # -------------------------------------------------------------------------
+    #  parser_plot_var_het
     parser_plot_var_het = subparser.add_parser("plot_var_het")
     parser_plot_var_het.add_argument("out_html", help="Path to output HTML file.")
-    parser_plot_var_het.add_argument("vcf", nargs="+", help="Path(s) to input VCF files.")
+    parser_plot_var_het.add_argument("fps", nargs="+", help="Path(s) to input fingerprint (.npz) files.")
     parser_plot_var_het.add_argument(
         "--title", default="NGS Chew Comparison Plot", help="Title to use for the output HTML file."
     )
     parser_plot_var_het.add_argument("--var_het_cache", help="Path to AAB cache JSON file.")
+    # -------------------------------------------------------------------------
 
     args = parser.parse_args(argv)
     logger.info("Options: %s" % vars(args))

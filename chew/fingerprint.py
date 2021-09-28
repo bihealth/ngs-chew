@@ -5,13 +5,10 @@ import shlex
 import subprocess
 import tempfile
 
-from bitarray import bitarray
-
 from logzero import logger
+from tqdm import tqdm
 import numpy as np
 import vcfpy
-
-from . import compare
 
 #: Key to use for GRCh37 release.
 RELEASE_37 = "GRCh37"
@@ -72,7 +69,7 @@ def vcf_to_fingerprint(args, prefix, genome_release, path_calls, prefix_fingerpr
         sites = {}
         for line in inputf:
             arr = line.strip().split("\t")
-            sites["%s%s:%s" % (prefix, arr[0], int(arr[1]) + 1)] = (0, 0, 0)
+            sites["%s%s:%s" % (prefix, arr[0], int(arr[1]) + 1)] = (0, 0, 0, 0)
     logger.info("Converting VCF to fingerprint...")
     with vcfpy.Reader.from_path(path_calls) as vcf_reader:
         if prefix_fingerprint:
@@ -88,20 +85,21 @@ def vcf_to_fingerprint(args, prefix, genome_release, path_calls, prefix_fingerpr
                     vcf_writer.write_record(record)
                 key = "%s%s:%s" % (prefix, record.CHROM, record.POS)
                 if key in sites:
-                    sites[key] = (record.INFO["DP"], record.call_for_sample[sample].gt_type, sum(record.call_for_sample[sample].data['AD']))
-    depths = [dp for dp,_,_ in sites.values()]
-    genotypes = [gt for _,gt,_ in sites.values()]
-    allelic_depth = [ad for _,_,ad in sites.values()]
+                    ad = record.call_for_sample[sample].data['AD']
+                    sites[key] = (
+                        record.INFO["DP"],
+                        record.call_for_sample[sample].gt_type,
+                        ad[0],
+                        sum(ad))
+    depths = [dp for dp,_,_,_ in sites.values()]
+    genotypes = [gt for _,gt,_,_ in sites.values()]
+    allelic_fractions = np.array([(adsum-ad) / adsum if adsum else 0.0 for _,_,ad,adsum in sites.values()],dtype=float)
     fingerprint = np.array(
         [
             [dp > int(args.min_coverage) for dp in depths],
             [gt != vcfpy.HOM_REF for gt in genotypes],
             [gt == vcfpy.HOM_ALT for gt in genotypes],
-        ],
-        dtype=bool,
-    )
-    allelic_fractions = np.array(
-        list(map(lambda x,y: x/y if y > 0.0 else 0,depths,allelic_depth))
+        ],dtype=bool
     )
     return sample, fingerprint, allelic_fractions
 
@@ -111,13 +109,24 @@ def write_fingerprint(args, genome_release, sample, fingerprint, allelic_fractio
     header = np.array(
         [
             "ngs_chew_fingerprint",  # file identifier
-            "1",  # file format version
+            "2",  # file format version
             genome_release,  # genome release
             sample,  # sample name
         ]
     )
     np.savez_compressed(args.output_fingerprint, header=header, fingerprint=fingerprint, allelic_fractions=allelic_fractions)
 
+def load_fingerprint(path):
+    nparr = np.load(path)
+    return nparr["header"][3], nparr["fingerprint"], nparr["allelic_fractions"]
+
+def load_fingerprints(paths):
+    logger.info("Loading fingerprints...")
+    fps = {
+        name: (fingerprint, allelc_fraction) for name, fingerprint, allelc_fraction in map(load_fingerprint, tqdm(paths))
+    }
+    logger.info("Loaded %d fingerprints", len(fps))
+    return fps
 
 def run(args):
     if args.output_fingerprint.endswith(".npz"):

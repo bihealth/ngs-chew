@@ -13,7 +13,6 @@ import vcfpy
 
 def load_aabs(args):
     aabs = {}
-
     for path_vcf in args.vcf:
         logger.info("- %s", path_vcf)
         with vcfpy.Reader.from_path(path_vcf) as vcf_reader:
