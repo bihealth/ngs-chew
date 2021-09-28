@@ -89,10 +89,14 @@ def relatedness(lhs, rhs):
 
 def run(args):
     fps = load_fingerprints(args.fingerprints)
+    fps = {
+            name: fp
+            for name, (fp,af) in fps.items()
+    }
     if args.min_mask_ones or args.max_mask_ones:
         fps = {
             name: fp
-            for name, (fp,af) in fps.items()
+            for name, fp in fps.items()
             if (not args.min_mask_ones or np.count_nonzero(fp[0]) >= args.min_mask_ones)
             and (not args.max_mask_ones or np.count_nonzero(fp[0]) <= args.max_mask_ones)
         }

@@ -9,7 +9,7 @@ from .fingerprint import load_fingerprint
 def run(args):
     logger.info("Writing statistics file...")
     with open(args.output, "wt") as outputf:
-        print("\t".join(["sample", "hets", "hom_alts", "hom_refs", "mask", "mean_af"]), file=outputf)
+        print("\t".join(["sample", "hets", "hom_alts", "hom_refs", "mask"]), file=outputf)
         for name, fp, _ in map(load_fingerprint, tqdm(args.fingerprints)):
             mask = fp[0]
             is_alt = fp[1]

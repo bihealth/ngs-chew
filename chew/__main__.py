@@ -70,7 +70,8 @@ def main(argv=None):
     #  parser_plot_aab
     parser_plot_aab = subparser.add_parser("plot_aab")
     parser_plot_aab.add_argument("out_html", help="Path to output HTML file.")
-    parser_plot_aab.add_argument("vcf", nargs="+", help="Path(s) to input VCF files.")
+    #parser_plot_aab.add_argument("vcf", nargs="+", help="Path(s) to input VCF files.")
+    parser_plot_aab.add_argument("fps", nargs="+", help="Path(s) to input fingerprint (.npz) files.")
     parser_plot_aab.add_argument(
         "--title", default="NGS Chew Comparison Plot", help="Title to use for the output HTML file."
     )
