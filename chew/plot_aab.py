@@ -80,11 +80,6 @@ def run(args):
     df = pd.DataFrame.from_dict({key: fps[key][1] for key in fps.keys()})
     df.drop(df[df.sum(axis=1) == 0].index,inplace=True)
 
-    # masking - remove targets not in a given set of keys K
-    # - load sites
-    # - rangeindex sites
-    # - filter rangeindex for sites given in K -> s
-    # - df.index = intersection(df.index,s)
 
     plot_data = {"sample": [], "bin": [], "count": []}
     for c in df.columns:

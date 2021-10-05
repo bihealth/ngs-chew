@@ -25,7 +25,7 @@ def main(argv=None):
         required=True,
         help="Path to output .npz file (extension .npz is added automatically if necessary).",
     )
-    parser_fingerprint.add_argument("--input-bam", required=True, help="Path to input .bam file")
+    parser_fingerprint.add_argument("--input", required=True, help="Path to input file. Accepted formats: bam, vcf.gz.")
     parser_fingerprint.add_argument("--genome-release", required=False, help="Force genome release")
     parser_fingerprint.add_argument(
         "--max-sites", default=0, type=int, help="Optional, maximal number of sites to consider"

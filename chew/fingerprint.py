@@ -17,13 +17,13 @@ RELEASE_37 = "GRCh37"
 RELEASE_38 = "GRCh38"
 
 #: Template for creating ``bcftools mpileup`` call.
-TPL_PILEUP = r"bcftools mpileup -a AD,DP --threads 2 -I -R %(sites)s -f %(reference)s %(input_bam)s"
+TPL_PILEUP = r"bcftools mpileup -a AD,DP --threads 2 -I -R %(sites)s -f %(reference)s %(input)s"
 
 #: Template for creating ``bcftools call`` call.
 TPL_CALL = r"bcftools call -c -Oz -o %(calls)s"
 
 
-def guess_release(input_bam, genome_release=None):
+def guess_release(input, genome_release=None):
     prefix = ""
     if genome_release:
         logger.info("Using genome release %s", genome_release)
@@ -128,12 +128,10 @@ def load_fingerprints(paths):
     logger.info("Loaded %d fingerprints", len(fps))
     return fps
 
-def run(args):
-    if args.output_fingerprint.endswith(".npz"):
-        args.output_fingerprint = args.output_fingerprint[: -len(".npz")]
-    logger.info("Chewing NGS at %s", args.input_bam)
+def generate_fingerprints_from_bam(args):
+    logger.info("Chewing NGS at %s", args.input)
     with tempfile.TemporaryDirectory() as tmp_dir:
-        prefix, genome_release = guess_release(args.input_bam, args.genome_release)
+        prefix, genome_release = guess_release(args.input, args.genome_release)
         path_sites = write_sites_bed(args, prefix, genome_release, tmp_dir)
         path_calls = call_sites(args, path_sites, tmp_dir)
         sample, fingerprint, allelic_fractions = vcf_to_fingerprint(
@@ -144,4 +142,28 @@ def run(args):
             args.output_fingerprint if args.write_vcf else None,
         )
         write_fingerprint(args, genome_release, sample, fingerprint, allelic_fractions)
+
+def generate_fingerprints_from_vcf(args):
+    logger.info("Chewing NGS at %s", args.input)
+    prefix, genome_release = guess_release(args.input, args.genome_release)
+    path_calls = args.input
+    sample, fingerprint, allelic_fractions = vcf_to_fingerprint(
+        args,
+        prefix,
+        genome_release,
+        path_calls,
+        args.output_fingerprint if args.write_vcf else None,
+    )
+    write_fingerprint(args, genome_release, sample, fingerprint, allelic_fractions)
+
+def run(args):
+    if args.output_fingerprint.endswith(".npz"):
+        args.output_fingerprint = args.output_fingerprint[: -len(".npz")]
+    if args.input.endswith(".bam"):
+        generate_fingerprints_from_bam(args)
+    elif args.input.endswith(".vcf.gz"):
+        generate_fingerprints_from_vcf(args)
+    else:
+        logger.error("Input format unknown. Accepted formats are: bam, vcf.gz.")
+
     logger.info("All done. Have a nice day!")

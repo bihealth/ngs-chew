@@ -12,6 +12,8 @@ paths = glob("/home/memsonmi/DEV/ngs-chew/tests/ddata/fingerprints/*.npz")
 vcf_paths = glob("/home/memsonmi/DEV/ngs-chew/tests/ddata/vcfs/*.vcf.gz")
 
 fps = load_fingerprints(paths)
+
+SITES = pd.read_csv("/home/memsonmi/DEV/ngs-chew/tests/ddata/sites.bed",sep='\t',header=None)
 # %%
 
 fps.keys()
@@ -80,4 +82,30 @@ D.drop(D[D.sum(axis=1) == 0].index,inplace=True)
 #%%
 for i,k in enumerate(fps.keys()):
     fps[k][1][fps[k][0][1]]
+# %%
+
+
+
+# %%
+
+fps = load_fingerprints(paths)
+df = pd.DataFrame.from_dict({key: fps[key][1] for key in fps.keys()})
+df.index=['.'.join(map(str,SITES.loc[ind,:])) for ind in SITES.index]
+df = df.fillna(0.0)
+df.drop(df[df.sum(axis=1) == 0].index,inplace=True)
+
+#%%
+
+plot_data = {"sample": [], "bin": [], "count": []}
+for c in df.columns:
+    hist = np.histogram(df[c], 50, (0.0, 1.0))
+    plot_data["count"] += hist[0].tolist()
+    plot_data["sample"] += [c] * hist[0].shape[0]
+    plot_data["bin"] += hist[1].tolist()[:-1]
+
+plot_df = pd.DataFrame.from_dict(plot_data)
+
+# %%
+
+
 # %%
