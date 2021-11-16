@@ -103,6 +103,9 @@ def vcf_to_fingerprint(args, prefix, genome_release, path_calls, prefix_fingerpr
     )
     return sample, fingerprint, allelic_fractions
 
+def fastq_to_fingerprint(args, prefix, genome_release, path_fastq, prefix_fingerprint):
+
+    return sample, fingerprint, allelic_fractions
 
 def write_fingerprint(args, genome_release, sample, fingerprint, allelic_fractions):
     logger.info("Writing fingerprint to %s.npz ...", args.output_fingerprint)

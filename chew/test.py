@@ -2,6 +2,7 @@
 from glob import glob
 from fingerprint import load_fingerprints
 from fingerprint import load_fingerprint
+import pathlib
 import pandas as pd
 import vcfpy
 import numpy as np
@@ -10,6 +11,7 @@ import matplotlib.pyplot as plt
 p = "/home/memsonmi/DEV/ngs-chew/tests/ddata/fingerprints"
 paths = glob("/home/memsonmi/DEV/ngs-chew/tests/ddata/fingerprints/*.npz")
 vcf_paths = glob("/home/memsonmi/DEV/ngs-chew/tests/ddata/vcfs/*.vcf.gz")
+SNPs_path = pathlib.Path("/media/memsonmi/Seagate Expansion Drive/ngs-chew/tests/ddata/GRCh37.SNPs.tsv.gz")
 
 fps = load_fingerprints(paths)
 
