@@ -59,8 +59,7 @@ def fastq_to_fingerprint(args, prefix, genome_release, paths_reads, prefix_finge
     # dictionary h-mer: SNP id
     hmer_to_kmer_dict = {hmers_df.iloc[i,0]:str(D.iloc[i,0])+':'+str(D.iloc[i,1])+'-'+str(D.iloc[i,2]) for i in D.index}
     hmers_distinct_index = hmers_df.drop_duplicates(subset=[0]).index
-
-    # Open new bed-file for writing.
+    # Open new bed-files for writing.
     kmers_ref_file = tmp.NamedTemporaryFile()
     kmers_alt_file = tmp.NamedTemporaryFile()
     with open(kmers_ref_file.name,'w') as f:
@@ -98,7 +97,7 @@ def fastq_to_fingerprint(args, prefix, genome_release, paths_reads, prefix_finge
             tmpfcounts_file = tmp.NamedTemporaryFile()
             kmercounts_file = tmp.NamedTemporaryFile()
             # open reads
-            cmd_zcat = shlex.split(f"zcat {' '.join([str(r) for r in paths_reads])}")
+            cmd_zcat = shlex.split(f"zcat -f {' '.join([str(r) for r in paths_reads])}")
             cmd_count = shlex.split(f"jellyfish count -m {2*size_k+1} -s {args.k2mer_size} --bf-size {args.bf_size} -C -t {args.cores} -o {tmpfcounts_file.name} --if {kmers_ref_file.name} {read_path}")
             p_zcat = subprocess.Popen(cmd_zcat, stdout=subprocess.PIPE)
             p_count = subprocess.Popen(cmd_count, stdin=p_zcat.stdout)
@@ -118,7 +117,7 @@ def fastq_to_fingerprint(args, prefix, genome_release, paths_reads, prefix_finge
             # --- count alt --- #
             tmpfcounts_file = tmp.NamedTemporaryFile()
             kmercounts_file = tmp.NamedTemporaryFile()
-            cmd_zcat = shlex.split(f"zcat {' '.join([str(r) for r in paths_reads])}")
+            cmd_zcat = shlex.split(f"zcat -f {' '.join([str(r) for r in paths_reads])}")
             cmd_count = shlex.split(f"jellyfish count -m {2*size_k+1} -s {args.k2mer_size} --bf-size {args.bf_size} -C -t {args.cores} -o {tmpfcounts_file.name} --if {kmers_ref_file.name} {read_path}")
             p_zcat = subprocess.Popen(cmd_zcat, stdout=subprocess.PIPE)
             p_count = subprocess.Popen(cmd_count, stdin=p_zcat.stdout)

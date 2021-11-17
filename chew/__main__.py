@@ -25,7 +25,11 @@ def main(argv=None):
         required=True,
         help="Path to output .npz file (extension .npz is added automatically if necessary).",
     )
-    parser_fingerprint.add_argument("--input", required=True, help="Path to input file. Accepted formats: bam, vcf.gz.")
+    parser_fingerprint.add_argument("--input", required=True, nargs='+', help="Path to input file. Accepted formats: bam, vcf.gz, fastq, fastq.gz.")
+    input_group = parser_fingerprint.add_mutually_exclusive_group(required=True)
+    input_group.add_argument('-inbam', help="Path to input alignment file in .bam format.")
+    input_group.add_argument('-invcf', help="Path to input variant calling file in .vcf format.")
+    input_group.add_argument('-infq', nargs='+', help="Path to input files containing reads in .fastq or .fastq.gz format.")
     parser_fingerprint.add_argument("--genome-release", required=False, help="Force genome release")
     parser_fingerprint.add_argument(
         "--max-sites", default=0, type=int, help="Optional, maximal number of sites to consider"
@@ -34,7 +38,7 @@ def main(argv=None):
         "--write-vcf",
         default=False,
         action="store_true",
-        help="Write out the VCF file created during fingerprinting",
+        help="Write out the VCF file created during fingerprinting if alignment file is given.",
     )
 
     # -------------------------------------------------------------------------
