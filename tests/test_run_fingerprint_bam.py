@@ -4,17 +4,17 @@ import numpy as np
 
 from chew.__main__ import main
 
-
-def test_smoke_test_run_fingerprint(path_tests, tmpdir):
+def test_smoke_test_run_fingerprint_bam(path_tests, tmpdir):
     main(
         [
             "fingerprint",
             "--reference",
             str(path_tests / "data" / "hs37d5.chr1_fragment.fa"),
-            "--input-bam",
-            str(path_tests / "data" / "igsr.HG00102.TP73.bam"),
             "--output-fingerprint",
             str(tmpdir / "out"),
+            "bam",
+            "--input",
+            str(path_tests / "data" / "igsr.HG00102.TP73.bam"),
         ]
     )
 

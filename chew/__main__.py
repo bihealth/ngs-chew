@@ -25,21 +25,34 @@ def main(argv=None):
         required=True,
         help="Path to output .npz file (extension .npz is added automatically if necessary).",
     )
-    parser_fingerprint.add_argument("--input", required=True, nargs='+', help="Path to input file. Accepted formats: bam, vcf.gz, fastq, fastq.gz.")
-    input_group = parser_fingerprint.add_mutually_exclusive_group(required=True)
-    input_group.add_argument('-inbam', help="Path to input alignment file in .bam format.")
-    input_group.add_argument('-invcf', help="Path to input variant calling file in .vcf format.")
-    input_group.add_argument('-infq', nargs='+', help="Path to input files containing reads in .fastq or .fastq.gz format.")
-    parser_fingerprint.add_argument("--genome-release", required=False, help="Force genome release")
     parser_fingerprint.add_argument(
         "--max-sites", default=0, type=int, help="Optional, maximal number of sites to consider"
     )
-    parser_fingerprint.add_argument(
+    parser_fingerprint.add_argument("--genome-release", required=False, help="Force genome release")
+
+    subparser_fingerprints = parser_fingerprint.add_subparsers(dest="specific")
+
+    # --- subparser fastq --- #
+    parser_fastq = subparser_fingerprints.add_parser("fastq")
+    parser_fastq.add_argument('--input', nargs='+', help="Path to input files containing reads in .fastq or .fastq.gz format.")
+    parser_fastq.add_argument('--sample', help="name of the sample.")
+    parser_fastq.add_argument('--k', default=15,type=int, help="h-mers are counted, where h = 2*k+1. Should range between 10 for 21-mers and 30 for 61-mers.")
+    parser_fastq.add_argument('--bf_size' , default="12G",type=str, help="Size of bloom filter used by Jellyfish. Should be equivalent to the total number of distinct k-mers found in the data set. Use 100G for full homo sapiens WGS data set.")
+    parser_fastq.add_argument('--depth' , default=300,type=int, help="sequencing depth. Used to find the expected number of hmers that occur more than once.")
+    parser_fastq.add_argument('--error_rate' , default=0.01,type=float, help="error rate in the given ngs-reads")
+
+        # --- subparser bam --- #
+    parser_bam = subparser_fingerprints.add_parser("bam")
+    parser_bam.add_argument('--input', help="Path to input alignment file in .bam format.")
+    parser_bam.add_argument(
         "--write-vcf",
         default=False,
         action="store_true",
         help="Write out the VCF file created during fingerprinting if alignment file is given.",
     )
+    # --- subparser vcf --- #
+    parser_vcf = subparser_fingerprints.add_parser("vcf")
+    parser_vcf.add_argument('--input', help="Path to input variant calling file in .vcf format.")
 
     # -------------------------------------------------------------------------
     #  parser_compare

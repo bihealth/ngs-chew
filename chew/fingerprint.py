@@ -111,7 +111,7 @@ def canonical_kmer(x):
     return min(x,x.translate(x.maketrans('ACGTNtacgtn','TGCANtgcan'))[::-1])
 
 def fastq_to_fingerprint(args, prefix, genome_release, paths_reads, path_reference):
-    SNPs_bed_path = pathlib.Path("data") / f"{genome_release}.SNPs.bed.gz"
+    SNPs_bed_path = pathlib.Path(os.path.dirname(__file__)) / "data" / f"{genome_release}.SNPs.bed.gz"
     # prepare h-mer sequences (h = 4*k-1)
     D = pd.read_csv(SNPs_bed_path,header=None,compression='gzip',sep='\t')
     D[0] = D[0].apply(lambda x: prefix+str(x))
@@ -135,6 +135,7 @@ def fastq_to_fingerprint(args, prefix, genome_release, paths_reads, path_referen
     # Open new bed-files for writing.
     kmers_ref_file = tmp.NamedTemporaryFile()
     kmers_alt_file = tmp.NamedTemporaryFile()
+    kmers_per_ref_alt = (0,0)
     with open(kmers_ref_file.name,'w') as f:
         with open(kmers_alt_file.name,'w') as g:
             dict_kmer_id_ref = defaultdict(list)
@@ -150,6 +151,7 @@ def fastq_to_fingerprint(args, prefix, genome_release, paths_reads, path_referen
                     dict_kmer_id_ref[kmer].append(id)
                     print('>'+id+'_'+['l','c','r'][i],file=f)
                     print(kmer,file=f)
+                    kmers_per_ref_alt[0] += 1
             dict_kmer_id_alt = defaultdict(list)
             for key in hmers_df.index:
                 id = hmers_df.loc[key,0]
@@ -163,15 +165,18 @@ def fastq_to_fingerprint(args, prefix, genome_release, paths_reads, path_referen
                     dict_kmer_id_alt[y].append(id)
                     print('>'+id+'_'+['l','c','r'][i],file=g)
                     print(y,file=g)
+                    kmers_per_ref_alt[1] += 1
             # use jellyfish to count k-mers
             # ref first
             df_counts = pd.DataFrame(np.zeros((len(index_original),2),dtype=int),index = index_original, columns = ['ref','alt'])
             # --- count ref --- #
             tmpfcounts_file = tmp.NamedTemporaryFile()
             kmercounts_file = tmp.NamedTemporaryFile()
+            k2mers = (int(kmers_per_ref_alt[0]*args.depth+args.error_rate*args.depth),int(kmers_per_ref_alt[1]*args.depth+args.error_rate*args.depth))
             # open reads
             cmd_zcat = shlex.split(f"zcat -f {' '.join([str(r) for r in paths_reads])}")
-            cmd_count = shlex.split(f"jellyfish count -m {2*size_k+1} -s {args.k2mer_size} --bf-size {args.bf_size} -C -t {args.cores} -o {tmpfcounts_file.name} --if {kmers_ref_file.name} {paths_reads}")
+            cmd_count = shlex.split(f"jellyfish count -m {2*size_k+1} -s {k2mers[0]} --bf-size {args.bf_size} -C -t {args.cores} -o {tmpfcounts_file.name} --if {kmers_ref_file.name} {paths_reads}")
+            logger.info("calling jellyfish to count reference h-mers: ",' '.join(cmd_count))
             p_zcat = subprocess.Popen(cmd_zcat, stdout=subprocess.PIPE)
             p_count = subprocess.Popen(cmd_count, stdin=p_zcat.stdout)
             p_count.communicate()
@@ -191,7 +196,8 @@ def fastq_to_fingerprint(args, prefix, genome_release, paths_reads, path_referen
             tmpfcounts_file = tmp.NamedTemporaryFile()
             kmercounts_file = tmp.NamedTemporaryFile()
             cmd_zcat = shlex.split(f"zcat -f {' '.join([str(r) for r in paths_reads])}")
-            cmd_count = shlex.split(f"jellyfish count -m {2*size_k+1} -s {args.k2mer_size} --bf-size {args.bf_size} -C -t {args.cores} -o {tmpfcounts_file.name} --if {kmers_ref_file.name} {paths_reads}")
+            cmd_count = shlex.split(f"jellyfish count -m {2*size_k+1} -s {k2mers[1]} --bf-size {args.bf_size} -C -t {args.cores} -o {tmpfcounts_file.name} --if {kmers_ref_file.name} {paths_reads}")
+            logger.info("calling jellyfish to count alternate h-mers: ",' '.join(cmd_count))
             p_zcat = subprocess.Popen(cmd_zcat, stdout=subprocess.PIPE)
             p_count = subprocess.Popen(cmd_count, stdin=p_zcat.stdout)
             p_count.communicate()
@@ -220,7 +226,10 @@ def fastq_to_fingerprint(args, prefix, genome_release, paths_reads, path_referen
             return fingerprint, allelic_fractions
 
 def generate_fingerprints_from_fastq(args):
-    logger.info("Chewing NGS at %s", args.infq)
+    logger.info("Chewing NGS at %s", args.input)
+    prefix, genome_release = guess_release(args.input, args.genome_release)
+    fingerprint, allelic_fractions = fastq_to_fingerprint(args,prefix,genome_release,args.input,args.reference)
+    write_fingerprint(args,genome_release, args.sample, fingerprint, allelic_fractions)
 
 
 def write_fingerprint(args, genome_release, sample, fingerprint, allelic_fractions):
@@ -248,9 +257,9 @@ def load_fingerprints(paths):
     return fps
 
 def generate_fingerprints_from_bam(args):
-    logger.info("Chewing NGS at %s", args.inbam)
+    logger.info("Chewing NGS at %s", args.input)
     with tempfile.TemporaryDirectory() as tmp_dir:
-        prefix, genome_release = guess_release(args.inbam, args.genome_release)
+        prefix, genome_release = guess_release(args.input, args.genome_release)
         path_sites = write_sites_bed(args, prefix, genome_release, tmp_dir)
         path_calls = call_sites(args, path_sites, tmp_dir)
         sample, fingerprint, allelic_fractions = vcf_to_fingerprint(
@@ -263,9 +272,9 @@ def generate_fingerprints_from_bam(args):
         write_fingerprint(args, genome_release, sample, fingerprint, allelic_fractions)
 
 def generate_fingerprints_from_vcf(args):
-    logger.info("Chewing NGS at %s", args.invcf)
-    prefix, genome_release = guess_release(args.invcf, args.genome_release)
-    path_calls = args.invcf
+    logger.info("Chewing NGS at %s", args.input)
+    prefix, genome_release = guess_release(args.input, args.genome_release)
+    path_calls = args.input
     sample, fingerprint, allelic_fractions = vcf_to_fingerprint(
         args,
         prefix,
@@ -276,15 +285,16 @@ def generate_fingerprints_from_vcf(args):
     write_fingerprint(args, genome_release, sample, fingerprint, allelic_fractions)
 
 def run(args):
+    print(vars(args))
     if args.output_fingerprint.endswith(".npz"):
         args.output_fingerprint = args.output_fingerprint[: -len(".npz")]
-    if args.inbam:
+    if args.specific == "bam":
         generate_fingerprints_from_bam(args)
-    elif args.invcf:
+    elif args.specific == "vcf":
         generate_fingerprints_from_vcf(args)
-    elif args.infq:
+    elif args.specific == "fastq":
         generate_fingerprints_from_fastq(args)
     else:
-        logger.error("Input format unknown. Accepted formats are: bam, vcf.gz, fastq, fastq.gz.")
+        logger.error("Input specification unknown. Accepted commands are: bam, vcf, fastq.")
 
     logger.info("All done. Have a nice day!")
