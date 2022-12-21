@@ -1,13 +1,13 @@
 """Plotting of var(het)."""
 
-import os
 import json
+import os
 
 from logzero import logger
 import numpy as np
+import pandas as pd
 import plotly.express as px
 import plotly.io as pio
-import pandas as pd
 import vcfpy
 
 

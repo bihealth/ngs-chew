@@ -1,6 +1,7 @@
 include versioneer.py
-include digestiflow_demux/_version.py
+include chew/_version.py
+include chew/data/*.bed.gz
 include *.rst
 include *.txt requirements/*.txt
 
-recursive-include digestiflow_demux *.py *.yml *.yaml Snakefile
+recursive-include chew *.py *.yml

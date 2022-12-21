@@ -3,8 +3,9 @@ import sys
 
 from logzero import logger
 
-from . import compare, fingerprint, stats, plot_compare, plot_aab, plot_var_het
 from chew import __version__
+
+from . import compare, fingerprint, plot_aab, plot_compare, plot_var_het, stats
 
 
 def main(argv=None):

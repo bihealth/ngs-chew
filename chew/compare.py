@@ -1,7 +1,7 @@
 import math
 
-import numpy as np
 from logzero import logger
+import numpy as np
 from tqdm import tqdm
 
 

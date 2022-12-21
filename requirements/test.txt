@@ -1,23 +1,10 @@
 -r base.txt
 
-# Wonderful py.test for testing
-pytest >=3.6.0
-pytest-runner >=2.11.1
-pytest-cache >=1.0
-pytest-cov >=2.4.0
-pytest-mock >=2.0.0
-
-# Faking of file systems
+black ==22.3.0
+isort >=5.10.1, <6.0
+flake8 >=5.0.4, <6.0
+pytest
+pytest-cov
 pyfakefs >=3.7.1
 
-# Coverage report
-coverage==4.5.1
-codacy-coverage >=1.3.6
-
-# Type checking
-mypy
-
-# More checking
-bandit
-pyflakes
-prospector
+mypy ==0.990

@@ -4,9 +4,8 @@
 """
 
 import os
-import sys
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 import versioneer
 
@@ -28,18 +27,14 @@ def parse_requirements(path):
     return requirements
 
 
-# Enforce python version >=3.4
-if sys.version_info < (3, 4):
-    print("At least Python 3.4 is required.\n", file=sys.stderr)
-    sys.exit(1)
-
-with open("README.rst") as readme_file:
+with open("README.md") as readme_file:
     readme = readme_file.read()
 
-with open("HISTORY.rst") as history_file:
+with open("CHANGELOG.md") as history_file:
     history = history_file.read()
 
-requirements = parse_requirements("requirements.txt")
+test_requirements = parse_requirements("requirements/test.txt")
+install_requirements = parse_requirements("requirements/base.txt")
 
 
 def bash_scripts(names):
@@ -48,29 +43,35 @@ def bash_scripts(names):
 
 
 setup(
-    name="ngs-chew",
-    version=versioneer.get_version(),
-    cmdclass=versioneer.get_cmdclass(),
-    description="NGS Chew",
-    long_description=readme + "\n\n" + history,
     author="Manuel Holtgrewe",
-    author_email="manuel.holtgrewe@bihealth.de",
-    url="https://github.com/bihealth/ngs-chew",
-    packages=find_packages(),
-    package_dir={"chew": "chew"},
-    entry_points={"console_scripts": (("ngs-chew=chew.__main__:main",),)},
-    include_package_data=True,
-    install_requires=requirements,
-    license="MIT license",
-    zip_safe=False,
-    keywords="bioinformatics",
+    author_email="manuel.holtgrewe@bih-charite.de",
+    python_requires=">=3.8",
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
+    description="NGS Chew",
+    entry_points={"console_scripts": (("ngs-chew=chew.__main__:main",),)},
+    install_requires=install_requirements,
+    license="MIT license",
+    long_description=readme + "\n\n" + history,
+    long_description_content_type="text/markdown",
+    include_package_data=True,
+    keywords="bioinformatics",
+    name="ngs-chew",
+    packages=find_packages(),
+    package_dir={"chew": "chew"},
+    test_suite="tests",
+    tests_require=test_requirements,
+    url="https://github.com/bihealth/ngs-chew",
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
+    zip_safe=False,
 )
