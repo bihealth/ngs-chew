@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.5.1](https://www.github.com/bihealth/ngs-chew/compare/v0.5.0...v0.5.1) (2022-12-21)
+
+
+### Bug Fixes
+
+* fix for the setup.py based build ([#4](https://www.github.com/bihealth/ngs-chew/issues/4)) ([255c848](https://www.github.com/bihealth/ngs-chew/commit/255c8482d1c9d14aadf15de95afaf97140e79205))
+
 ## [0.5.0](https://www.github.com/bihealth/ngs-chew/compare/v0.4.0...v0.5.0) (2022-12-21)
 
 
