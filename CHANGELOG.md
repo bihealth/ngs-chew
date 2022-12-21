@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://www.github.com/bihealth/ngs-chew/compare/v0.4.0...v0.5.0) (2022-12-21)
+
+
+### Features
+
+* adding README file ([#1](https://www.github.com/bihealth/ngs-chew/issues/1)) ([#2](https://www.github.com/bihealth/ngs-chew/issues/2)) ([620d487](https://www.github.com/bihealth/ngs-chew/commit/620d48747b845e93533a9f84aff082cc03cb2448))
+
 ## v0.4.0
 
 - Adding `plot_var_het`.
