@@ -1,0 +1,75 @@
+[build-system]
+requires = ["hatchling", "versioneer[toml]"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ngs-chew"
+authors = [
+  { name="Manuel Holtgrewe", email="manuel.holtgrewe@bih-charite.de" },
+]
+description = "NGS data quality control"
+license = {file = "LICENSE.txt"}
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+dynamic = [
+    "version",
+]
+dependencies = [
+    "logzero",
+    "tqdm",
+    "numpy",
+    "vcfpy",
+    "pysam",
+    "pandas",
+    "plotly",
+    "scipy",
+]
+
+[tool.hatch]
+version = {attr = "chew.__version__"}
+
+[project.optional-dependencies]
+test = [
+    "black ==22.3.0",
+    "isort >=5.10.1, <6.0",
+    "flake8 >= 5.0.4, <6.0",
+    "flake8-pyproject",
+    "pytest",
+    "pytest-cov",
+    "pyfakefs",
+    "mypy ==0.990",
+]
+
+[project.scripts]
+ngs-chew = "chew.__main__.main"
+
+[project.urls]
+"Homepage" = "https://github.com/bihealth/ngs-chew"
+"Bug Tracker" = "https://github.com/bihealth/ngs-chew/issues"
+
+[tool.flake8]
+exclude = [
+    "versioneer.py",
+]
+ignore = ["E203", "E266", "E501", "W503"]
+max-line-length = 80
+max-complexity = 18
+select = ["B", "C", "E", "F", "W", "T4", "B9"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "--cov=chew --cov=tests --cov-report=xml"
+testpaths = ["tests"]
+
+[tool.versioneer]
