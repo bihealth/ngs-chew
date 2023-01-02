@@ -30,7 +30,7 @@ class Config:
     min_coverage: int
     reference: str
     output_fingerprint: str
-    output_aafs: typing.List[str]
+    output_aafs: bool
     genome_release: str
     input_bam: str
     max_sites: int
@@ -81,7 +81,11 @@ def call_sites(config: Config, path_sites: str, tmp_dir: str):
 
 
 def vcf_to_fingerprint(
-    config: Config, chr_prefix: str, genome_release: str, path_calls: str, prefix_fingerprint: str
+    config: Config,
+    chr_prefix: str,
+    genome_release: str,
+    path_calls: str,
+    prefix_fingerprint: typing.Optional[str],
 ):
     logger.info("Reading sites BED...")
     path_gz = os.path.join(os.path.dirname(__file__), "data", "%s_sites.bed.gz" % genome_release)
@@ -147,10 +151,12 @@ def write_fingerprint(
             sections,  # sections in the file
         ]
     )
-    kwargs = {"header": header, "fingerprint": fingerprint}
-    if aafs is not None:
-        kwargs["aafs"] = aafs
-    np.savez_compressed(config.output_fingerprint, **kwargs)
+    if aafs is None:
+        np.savez_compressed(config.output_fingerprint, header=header, fingerprint=fingerprint)
+    else:
+        np.savez_compressed(
+            config.output_fingerprint, header=header, fingerprint=fingerprint, aafs=aafs
+        )
 
 
 def run(config: Config):

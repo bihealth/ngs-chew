@@ -1,17 +1,10 @@
 """Plotting of var(het)."""
 
-import json
-
 import attrs
 from logzero import logger
-import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.io as pio
-import tqdm
-import vcfpy
-
-from chew.compare import load_fingerprint_with_aafs
 
 
 @attrs.frozen
@@ -22,8 +15,7 @@ class Config:
     stats_out: str
 
 
-
-def run(config : Config):
+def run(config: Config):
     logger.info("Loading statistics...")
     df = pd.read_csv(config.stats_out, sep="\t", header=0, index_col=0)
 

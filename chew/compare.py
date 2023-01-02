@@ -15,6 +15,7 @@ class Config:
     max_mask_ones: typing.Optional[int]
     fingerprints: typing.List[str]
 
+
 def load_fingerprint(path, *, load_aafs: bool = False):
     nparr = np.load(path)
     if load_aafs:

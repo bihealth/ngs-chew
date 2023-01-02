@@ -1,8 +1,6 @@
-import sys
 import typing
 
 import click
-from logzero import logger
 
 from chew import __version__, compare, fingerprint, plot_compare, plot_var_het, stats
 
@@ -39,7 +37,7 @@ def cli_fingerprint(
     ctx: click.Context,
     min_coverage: int,
     reference: str,
-    output_fingerprint: bool,
+    output_fingerprint: str,
     output_aafs: bool,
     input_bam: str,
     genome_release: str,
@@ -144,7 +142,3 @@ def cli_plot_var_het(
         stats_out=stats_out,
     )
     plot_var_het.run(config)
-
-
-if __name__ == "__main__":
-    sys.exit(main())

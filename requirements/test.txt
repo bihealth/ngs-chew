@@ -5,6 +5,7 @@ isort >=5.10.1, <6.0
 flake8 >=5.0.4, <6.0
 pytest
 pytest-cov
+pytest-click
 pyfakefs >=3.7.1
 
 mypy ==0.990

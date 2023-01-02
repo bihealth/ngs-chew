@@ -3,7 +3,6 @@ import typing
 import attrs
 from logzero import logger
 import numpy as np
-from numpy import ma
 from tqdm import tqdm
 
 from chew.compare import load_fingerprint_with_aafs
