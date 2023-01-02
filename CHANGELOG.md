@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.0](https://www.github.com/bihealth/ngs-chew/compare/v0.5.1...v0.6.0) (2023-01-02)
+
+
+### Features
+
+* allow writing allele fraction to fingerprint file ([#7](https://www.github.com/bihealth/ngs-chew/issues/7)) ([76f1511](https://www.github.com/bihealth/ngs-chew/commit/76f1511e2816ad08e37d76a35a0de02ba9e74c51))
+
+
+### Bug Fixes
+
+* formula for relatedness was off by *2 ([#9](https://www.github.com/bihealth/ngs-chew/issues/9)) ([3550dfb](https://www.github.com/bihealth/ngs-chew/commit/3550dfb0f35ae85b0e30de74cfda6c8db577bd94))
+
 ### [0.5.1](https://www.github.com/bihealth/ngs-chew/compare/v0.5.0...v0.5.1) (2022-12-21)
 
 
