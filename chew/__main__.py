@@ -24,6 +24,13 @@ def main(argv=None):
         required=True,
         help="Path to output .npz file (extension .npz is added automatically if necessary).",
     )
+    parser_fingerprint.add_argument(
+        "--output-aafs",
+        dest="output_aafs",
+        default=False,
+        action="store_true",
+        help="Write out alternate allele fractions",
+    )
     parser_fingerprint.add_argument("--input-bam", required=True, help="Path to input .bam file")
     parser_fingerprint.add_argument("--genome-release", required=False, help="Force genome release")
     parser_fingerprint.add_argument(
