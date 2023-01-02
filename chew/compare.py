@@ -31,7 +31,7 @@ def relatedness(lhs, rhs):
     het_ij = np.count_nonzero(arr_ij)
     n_ibs0 = np.count_nonzero(((lhs_ref & rhs_hom_alt) | (rhs_ref & lhs_hom_alt)) & mask)
     # Compute relateness
-    rel = (het_ij - 2 * n_ibs0) / (0.5 * math.sqrt(het_i * het_j))
+    rel = (het_ij - 2 * n_ibs0) / math.sqrt(het_i * het_j)
     return n_ibs0, rel, np.count_nonzero(mask)
 
 
