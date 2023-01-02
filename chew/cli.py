@@ -27,7 +27,7 @@ def cli(ctx: click.Context, verbose: bool):
 )
 @click.option(
     "--output-aafs/--no-output-aafs",
-    default=False,
+    default=True,
     help="Write alternate allele fractions to .npz file.",
 )
 @click.option("--input-bam", required=True, help="Path to input BAM file.")
@@ -102,29 +102,48 @@ def cli_stats(
     stats.run(config)
 
 
-@cli.command(help="Plot result of 'ngs-chew compare'.")
-@click.argument("stats")
+@cli.command("plot-compare", help="Plot result of 'ngs-chew compare'.")
 @click.option(
     "--title", default="NGS Chew Comparison Plot", help="title to use for the output HTML file."
 )
-def plot_compare(
+@click.argument("compare-out")
+@click.argument("out_html")
+@click.pass_context
+def cli_plot_compare(
     ctx: click.Context,
+    title: str,
+    compare_out: str,
     out_html: str,
 ):
-    pass
+    config = plot_compare.Config(
+        verbosity=2 if ctx.obj["verbose"] else 1,
+        compare_out=compare_out,
+        out_html=out_html,
+        title=title,
+    )
+    plot_compare.run(config)
 
 
-@cli.command(help="Plot var(het) metric from .npz files.")
-@click.argument("fingerprints", nargs=-1)
+@cli.command("plot-var-het", help="Plot var(het) metric from .npz files.")
 @click.option(
     "--title", default="NGS Chew var(het) Plot", help="title to use for the output HTML file."
 )
-def plot_var_het(
+@click.argument("stats_out")
+@click.argument("out_html")
+@click.pass_context
+def cli_plot_var_het(
     ctx: click.Context,
+    title: str,
+    stats_out: str,
     out_html: str,
-    fingerprints: typing.List[str],
 ):
-    pass
+    config = plot_var_het.Config(
+        verbosity=2 if ctx.obj["verbose"] else 1,
+        title=title,
+        out_html=out_html,
+        stats_out=stats_out,
+    )
+    plot_var_het.run(config)
 
 
 if __name__ == "__main__":

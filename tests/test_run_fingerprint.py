@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from chew.__main__ import main
+from chew.cli import main
 
 
 def test_smoke_test_run_fingerprint(path_tests, tmpdir):

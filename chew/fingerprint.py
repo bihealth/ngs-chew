@@ -4,7 +4,9 @@ import os
 import shlex
 import subprocess
 import tempfile
+import typing
 
+import attrs
 from logzero import logger
 import numpy as np
 import vcfpy
@@ -20,6 +22,19 @@ TPL_PILEUP = r"bcftools mpileup -a AD,DP --threads 2 -I -R %(sites)s -f %(refere
 
 #: Template for creating ``bcftools call`` call.
 TPL_CALL = r"bcftools call -c -Oz -o %(calls)s"
+
+
+@attrs.frozen
+class Config:
+    verbosity: int
+    min_coverage: int
+    reference: str
+    output_fingerprint: str
+    output_aafs: typing.List[str]
+    genome_release: str
+    input_bam: str
+    max_sites: int
+    write_vcf: bool
 
 
 def guess_release(input_bam, genome_release=None):
@@ -47,10 +62,14 @@ def write_sites_bed(args, prefix, genome_release, tmp_dir):
     return path_bed
 
 
-def call_sites(args, path_sites, tmp_dir):
+def call_sites(config: Config, path_sites: str, tmp_dir: str):
     logger.info("Performing variant calling at sites")
     path_vcf = os.path.join(tmp_dir, "calls.vcf.gz")
-    cmd_pileup = TPL_PILEUP % {"sites": path_sites, **vars(args)}
+    cmd_pileup = TPL_PILEUP % {
+        "sites": path_sites,
+        "reference": config.reference,
+        "input_bam": config.input_bam,
+    }
     cmd_call = TPL_CALL % {"calls": path_vcf}
     logger.info("  mpileup: %s", " ".join(shlex.split(cmd_pileup)))
     logger.info("  call:    %s", " ".join(shlex.split(cmd_call)))
@@ -61,7 +80,9 @@ def call_sites(args, path_sites, tmp_dir):
     return path_vcf
 
 
-def vcf_to_fingerprint(args, chr_prefix, genome_release, path_calls, prefix_fingerprint):
+def vcf_to_fingerprint(
+    config: Config, chr_prefix: str, genome_release: str, path_calls: str, prefix_fingerprint: str
+):
     logger.info("Reading sites BED...")
     path_gz = os.path.join(os.path.dirname(__file__), "data", "%s_sites.bed.gz" % genome_release)
     with gzip.open(path_gz, "rt") as inputf:
@@ -96,10 +117,10 @@ def vcf_to_fingerprint(args, chr_prefix, genome_release, path_calls, prefix_fing
                     sites[key] = (record.INFO["DP"], call.gt_type, aab_at_site)
     depths = [dp for dp, _, _ in sites.values()]
     genotypes = [gt for _, gt, _ in sites.values()]
-    aafs = [aab for _, _, aab in sites.values()]
+    aafs = np.array([aab for _, _, aab in sites.values()], dtype="float32")
     fingerprint = np.array(
         [
-            [dp > args.min_coverage for dp in depths],
+            [dp > config.min_coverage for dp in depths],
             [gt != vcfpy.HOM_REF for gt in genotypes],
             [gt == vcfpy.HOM_ALT for gt in genotypes],
         ],
@@ -108,9 +129,15 @@ def vcf_to_fingerprint(args, chr_prefix, genome_release, path_calls, prefix_fing
     return sample, fingerprint, aafs
 
 
-def write_fingerprint(args, genome_release, sample, fingerprint, aafs):
-    logger.info("Writing fingerprint to %s.npz ...", args.output_fingerprint)
-    sections = "fingerprint,aafs" if aafs else "fingerprint"
+def write_fingerprint(
+    config: Config,
+    genome_release: str,
+    sample: str,
+    fingerprint: str,
+    aafs: typing.Optional[typing.List[float]],
+):
+    logger.info("Writing fingerprint to %s.npz ...", config.output_fingerprint)
+    sections = "fingerprint,aafs" if aafs is not None else "fingerprint"
     header = np.array(
         [
             "ngs_chew_fingerprint",  # file identifier
@@ -121,27 +148,27 @@ def write_fingerprint(args, genome_release, sample, fingerprint, aafs):
         ]
     )
     kwargs = {"header": header, "fingerprint": fingerprint}
-    if aafs:
+    if aafs is not None:
         kwargs["aafs"] = aafs
-    np.savez_compressed(args.output_fingerprint, **kwargs)
+    np.savez_compressed(config.output_fingerprint, **kwargs)
 
 
-def run(args):
-    if args.output_fingerprint.endswith(".npz"):
-        args.output_fingerprint = args.output_fingerprint[: -len(".npz")]
-    logger.info("Chewing NGS at %s", args.input_bam)
+def run(config: Config):
+    if config.output_fingerprint.endswith(".npz"):
+        config = attrs.evolve(config, output_fingerprint=config.output_fingerprint[: -len(".npz")])
+    logger.info("Chewing NGS at %s", config.input_bam)
     with tempfile.TemporaryDirectory() as tmp_dir:
-        chr_prefix, genome_release = guess_release(args.input_bam, args.genome_release)
-        path_sites = write_sites_bed(args, chr_prefix, genome_release, tmp_dir)
-        path_calls = call_sites(args, path_sites, tmp_dir)
+        chr_prefix, genome_release = guess_release(config.input_bam, config.genome_release)
+        path_sites = write_sites_bed(config, chr_prefix, genome_release, tmp_dir)
+        path_calls = call_sites(config, path_sites, tmp_dir)
         sample, fingerprint, aafs = vcf_to_fingerprint(
-            args,
+            config,
             chr_prefix,
             genome_release,
             path_calls,
-            args.output_fingerprint if args.write_vcf else None,
+            config.output_fingerprint if config.write_vcf else None,
         )
-        if not args.output_aafs:
+        if not config.output_aafs:
             aafs = None  # only pass to write_fingerprint if asked to do so
-        write_fingerprint(args, genome_release, sample, fingerprint, aafs)
+        write_fingerprint(config, genome_release, sample, fingerprint, aafs)
     logger.info("All done. Have a nice day!")
