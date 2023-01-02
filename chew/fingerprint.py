@@ -61,14 +61,14 @@ def call_sites(args, path_sites, tmp_dir):
     return path_vcf
 
 
-def vcf_to_fingerprint(args, prefix, genome_release, path_calls, prefix_fingerprint):
+def vcf_to_fingerprint(args, chr_prefix, genome_release, path_calls, prefix_fingerprint):
     logger.info("Reading sites BED...")
     path_gz = os.path.join(os.path.dirname(__file__), "data", "%s_sites.bed.gz" % genome_release)
     with gzip.open(path_gz, "rt") as inputf:
         sites = {}
         for line in inputf:
             arr = line.strip().split("\t")
-            sites["%s%s:%s" % (prefix, arr[0], int(arr[1]) + 1)] = (0, 0)
+            sites["%s%s:%s" % (chr_prefix, arr[0], int(arr[1]) + 1)] = (0, 0, float("nan"))
     logger.info("Converting VCF to fingerprint...")
     with vcfpy.Reader.from_path(path_calls) as vcf_reader:
         if prefix_fingerprint:
@@ -82,11 +82,21 @@ def vcf_to_fingerprint(args, prefix, genome_release, path_calls, prefix_fingerpr
             for record in vcf_reader:
                 if prefix_fingerprint:
                     vcf_writer.write_record(record)
-                key = "%s%s:%s" % (prefix, record.CHROM, record.POS)
+                key = "%s%s:%s" % (chr_prefix, record.CHROM, record.POS)
                 if key in sites:
-                    sites[key] = (record.INFO["DP"], record.call_for_sample[sample].gt_type)
-    depths = [dp for dp, _ in sites.values()]
-    genotypes = [gt for _, gt in sites.values()]
+                    call = record.call_for_sample[sample]
+                    cov = sum(call.data["AD"])
+                    if cov:
+                        aab_at_site = min(
+                            call.data["AD"][0] / cov,
+                            1.0 - call.data["AD"][0] / cov,
+                        )
+                    else:
+                        aab_at_site = float("nan")
+                    sites[key] = (record.INFO["DP"], call.gt_type, aab_at_site)
+    depths = [dp for dp, _, _ in sites.values()]
+    genotypes = [gt for _, gt, _ in sites.values()]
+    aafs = [aab for _, _, aab in sites.values()]
     fingerprint = np.array(
         [
             [dp > args.min_coverage for dp in depths],
@@ -95,20 +105,25 @@ def vcf_to_fingerprint(args, prefix, genome_release, path_calls, prefix_fingerpr
         ],
         dtype=bool,
     )
-    return sample, fingerprint
+    return sample, fingerprint, aafs
 
 
-def write_fingerprint(args, genome_release, sample, fingerprint):
+def write_fingerprint(args, genome_release, sample, fingerprint, aafs):
     logger.info("Writing fingerprint to %s.npz ...", args.output_fingerprint)
+    sections = "fingerprint,aafs" if aafs else "fingerprint"
     header = np.array(
         [
             "ngs_chew_fingerprint",  # file identifier
-            "1",  # file format version
+            "2",  # file format version
             genome_release,  # genome release
             sample,  # sample name
+            sections,  # sections in the file
         ]
     )
-    np.savez_compressed(args.output_fingerprint, header=header, fingerprint=fingerprint)
+    kwargs = {"header": header, "fingerprint": fingerprint}
+    if aafs:
+        kwargs["aafs"] = aafs
+    np.savez_compressed(args.output_fingerprint, **kwargs)
 
 
 def run(args):
@@ -116,15 +131,17 @@ def run(args):
         args.output_fingerprint = args.output_fingerprint[: -len(".npz")]
     logger.info("Chewing NGS at %s", args.input_bam)
     with tempfile.TemporaryDirectory() as tmp_dir:
-        prefix, genome_release = guess_release(args.input_bam, args.genome_release)
-        path_sites = write_sites_bed(args, prefix, genome_release, tmp_dir)
+        chr_prefix, genome_release = guess_release(args.input_bam, args.genome_release)
+        path_sites = write_sites_bed(args, chr_prefix, genome_release, tmp_dir)
         path_calls = call_sites(args, path_sites, tmp_dir)
-        sample, fingerprint = vcf_to_fingerprint(
+        sample, fingerprint, aafs = vcf_to_fingerprint(
             args,
-            prefix,
+            chr_prefix,
             genome_release,
             path_calls,
             args.output_fingerprint if args.write_vcf else None,
         )
-        write_fingerprint(args, genome_release, sample, fingerprint)
+        if not args.output_aafs:
+            aafs = None  # only pass to write_fingerprint if asked to do so
+        write_fingerprint(args, genome_release, sample, fingerprint, aafs)
     logger.info("All done. Have a nice day!")
