@@ -58,7 +58,7 @@ setup(
         "Programming Language :: Python :: 3.11",
     ],
     description="NGS Chew",
-    entry_points={"console_scripts": (("ngs-chew=chew.__main__:main",),)},
+    entry_points={"console_scripts": (("ngs-chew=chew.cli:cli",),)},
     install_requires=install_requirements,
     license="MIT license",
     long_description=readme + "\n\n" + history,

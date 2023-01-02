@@ -1,13 +1,31 @@
 import math
+import typing
 
+import attrs
 from logzero import logger
 import numpy as np
 from tqdm import tqdm
 
 
-def load_fingerprint(path):
+@attrs.frozen
+class Config:
+    verbosity: int
+    output_prefix: str
+    min_mask_ones: typing.Optional[int]
+    max_mask_ones: typing.Optional[int]
+    fingerprints: typing.List[str]
+
+
+def load_fingerprint(path, *, load_aafs: bool = False):
     nparr = np.load(path)
-    return nparr["header"][3], nparr["fingerprint"]
+    if load_aafs:
+        return nparr["header"][3], nparr["fingerprint"], nparr.get("aafs")
+    else:
+        return nparr["header"][3], nparr["fingerprint"]
+
+
+def load_fingerprint_with_aafs(path):
+    return load_fingerprint(path, load_aafs=True)
 
 
 def relatedness(lhs, rhs):
@@ -35,18 +53,18 @@ def relatedness(lhs, rhs):
     return n_ibs0, rel, np.count_nonzero(mask)
 
 
-def run(args):
+def run(config: Config):
     logger.info("Loading fingerprints...")
     fps = {
-        name: fingerprint for name, fingerprint in map(load_fingerprint, tqdm(args.fingerprints))
+        name: fingerprint for name, fingerprint in map(load_fingerprint, tqdm(config.fingerprints))
     }
     logger.info("Loaded %d fingerprints", len(fps))
-    if args.min_mask_ones or args.max_mask_ones:
+    if config.min_mask_ones or config.max_mask_ones:
         fps = {
             name: fp
             for name, fp in fps.items()
-            if (not args.min_mask_ones or np.count_nonzero(fp[0]) >= args.min_mask_ones)
-            and (not args.max_mask_ones or np.count_nonzero(fp[0]) <= args.max_mask_ones)
+            if (not config.min_mask_ones or np.count_nonzero(fp[0]) >= config.min_mask_ones)
+            and (not config.max_mask_ones or np.count_nonzero(fp[0]) <= config.max_mask_ones)
         }
     logger.info("Filtered to %d fingerprints", len(fps))
     header = ["name"] + list(fps)
@@ -66,12 +84,12 @@ def run(args):
         rows_rel.append(row_rel)
         rows_mask.append(row_mask)
 
-    with open("%s.relatedness.txt" % args.output_prefix, "wt") as outputf:
+    with open("%s.relatedness.txt" % config.output_prefix, "wt") as outputf:
         for row in [header] + rows_rel:
             print("\t".join(map(str, row)), file=outputf)
-    with open("%s.ibs0.txt" % args.output_prefix, "wt") as outputf:
+    with open("%s.ibs0.txt" % config.output_prefix, "wt") as outputf:
         for row in [header] + rows_n_ibs0:
             print("\t".join(map(str, row)), file=outputf)
-    with open("%s.mask.txt" % args.output_prefix, "wt") as outputf:
+    with open("%s.mask.txt" % config.output_prefix, "wt") as outputf:
         for row in [header] + rows_mask:
             print("\t".join(map(str, row)), file=outputf)

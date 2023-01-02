@@ -6,3 +6,5 @@ pysam
 pandas
 plotly
 scipy
+click
+attrs
