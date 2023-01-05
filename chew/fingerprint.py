@@ -271,7 +271,7 @@ def write_fingerprint(
     sample: str,
     fingerprint: typing.Optional[np.array],
     aafs: typing.Optional[typing.List[float]],
-    samtools_idxstats: typing.Optional[str]
+    samtools_idxstats: typing.Optional[str],
 ):
     logger.info("Writing fingerprint to %s.npz ...", config.output_fingerprint)
     sections = "fingerprint,aafs" if aafs is not None else "fingerprint"
@@ -285,8 +285,11 @@ def write_fingerprint(
         ]
     )
     np.savez_compressed(
-        config.output_fingerprint, header=header, fingerprint=fingerprint, aafs=aafs,
-        samtools_idxstats=samtools_idxstats
+        config.output_fingerprint,
+        header=header,
+        fingerprint=fingerprint,
+        aafs=aafs,
+        samtools_idxstats=samtools_idxstats,
     )
 
 
@@ -322,6 +325,8 @@ def run(config: Config):
     else:
         samtools_idxstats_out = None
 
-    write_fingerprint(config, genome_release, sample, autosomal_fingerprint, autosomal_aafs, samtools_idxstats_out)
+    write_fingerprint(
+        config, genome_release, sample, autosomal_fingerprint, autosomal_aafs, samtools_idxstats_out
+    )
 
     logger.info("All done. Have a nice day!")
