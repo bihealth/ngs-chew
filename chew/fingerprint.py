@@ -10,6 +10,7 @@ import warnings
 import attrs
 from logzero import logger
 import numpy as np
+import numpy.typing
 import pysam
 import vcfpy
 
@@ -116,14 +117,15 @@ def analyze_bam_header(
     input_bam, genome_release: typing.Optional[str] = None
 ) -> typing.Tuple[str, str, str]:
     with pysam.AlignmentFile(input_bam, "rb") as samfile:
-        if "RG" in samfile.header:
-            sample_names = {rg["SM"] for rg in samfile.header["RG"] if "SM" in rg}
+        header = samfile.header.to_dict()
+        if "RG" in header:
+            sample_names = {rg["SM"] for rg in header["RG"] if "SM" in rg}
         else:
             sample_names = set()
 
         samfile_chrom_lens = {
             record["SN"]: record["LN"]
-            for record in samfile.header.get("SQ")
+            for record in (header.get("SQ") or [])
             if "SN" in record
             and record["SN"] in CHROM_LENS_GRCH37
             or record["SN"] in CHROM_LENS_GRCH38
@@ -269,7 +271,7 @@ def write_fingerprint(
     config: Config,
     genome_release: str,
     sample: str,
-    fingerprint: typing.Optional[np.array],
+    fingerprint: typing.Optional[numpy.typing.NDArray],
     aafs: typing.Optional[typing.List[float]],
     samtools_idxstats: typing.Optional[str],
 ):
@@ -287,9 +289,9 @@ def write_fingerprint(
     np.savez_compressed(
         config.output_fingerprint,
         header=header,
-        fingerprint=fingerprint,
-        aafs=aafs,
-        samtools_idxstats=samtools_idxstats,
+        fingerprint=fingerprint if fingerprint is not None else np.zeros(0),
+        aafs=aafs if aafs is not None else np.zeros(0),
+        samtools_idxstats=samtools_idxstats if samtools_idxstats is not None else np.zeros(0),
     )
 
 
