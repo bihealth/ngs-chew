@@ -106,8 +106,10 @@ class Config:
     input_bam: str
     max_sites: int
     write_vcf: bool
-    #: Whether to collect autosomal snp information.
+    #: Whether to collect autosomal SNP information.
     step_autosomal_snps: bool
+    #: Whether to collect chrX SNP information.
+    step_chrx_snps: bool
     #: Whether to collect "samtools idxstats" output.  Only applicable when extracting information
     #: from BAM files.
     step_samtools_idxstats: bool
@@ -194,15 +196,17 @@ def call_sites(config: Config, path_sites: str, tmp_dir: str):
     return path_vcf
 
 
-def autosomal_snps_step_call(
+def snps_step_call(
     config: Config,
     chr_prefix: str,
     genome_release: str,
+    sites_suffix: str,
     path_calls: str,
     prefix_fingerprint: typing.Optional[str],
 ):
-    logger.info("Reading sites BED...")
-    path_gz = os.path.join(os.path.dirname(__file__), "data", "%s_sites.bed.gz" % genome_release)
+    bed_file = f"{genome_release}_{sites_suffix}.bed.gz"
+    logger.info("Reading sites BED (%s)...", bed_file)
+    path_gz = os.path.join(os.path.dirname(__file__), "data", bed_file)
     with gzip.open(path_gz, "rt") as inputf:
         sites = {}
         for line in inputf:
@@ -211,8 +215,8 @@ def autosomal_snps_step_call(
     logger.info("Converting VCF to fingerprint...")
     with vcfpy.Reader.from_path(path_calls) as vcf_reader:
         if prefix_fingerprint:
-            logger.info("Writing VCF to %s", prefix_fingerprint + ".vcf.gz")
-            out_vcf = vcfpy.Writer.from_path(prefix_fingerprint + ".vcf.gz", vcf_reader.header)
+            logger.info("Writing VCF to %s", f"{prefix_fingerprint}.vcf.gz")
+            out_vcf = vcfpy.Writer.from_path(f"{prefix_fingerprint}.vcf.gz", vcf_reader.header)
         else:
             logger.info("Not writing out VCF")
             out_vcf = contextlib.suppress()
@@ -250,47 +254,63 @@ def autosomal_snps_step_call(
 def autosomal_snps_step(
     config: Config,
     chr_prefix: str,
+    sites_suffix: str,
     genome_release: str,
 ):
     with tempfile.TemporaryDirectory() as tmp_dir:
         path_sites = write_sites_bed(config, chr_prefix, genome_release, tmp_dir)
         path_calls = call_sites(config, path_sites, tmp_dir)
-        autosomal_fingerprint, autosomal_aafs = autosomal_snps_step_call(
+        fingerprint, aafs = snps_step_call(
             config,
             chr_prefix,
             genome_release,
+            sites_suffix,
             path_calls,
             config.output_fingerprint if config.write_vcf else None,
         )
         if not config.output_aafs:
-            autosomal_aafs = None  # only pass to write_fingerprint if asked to do so
-    return autosomal_fingerprint, autosomal_aafs
+            aafs = None  # only pass to write_fingerprint if asked to do so
+    return fingerprint, aafs
 
 
 def write_fingerprint(
     config: Config,
     genome_release: str,
     sample: str,
-    fingerprint: typing.Optional[numpy.typing.NDArray],
-    aafs: typing.Optional[typing.List[float]],
+    autosomal_fingerprint: typing.Optional[numpy.typing.NDArray],
+    autosomal_aafs: typing.Optional[typing.List[float]],
+    chrx_fingerprint: typing.Optional[numpy.typing.NDArray],
+    chrx_aafs: typing.Optional[typing.List[float]],
     samtools_idxstats: typing.Optional[str],
 ):
     logger.info("Writing fingerprint to %s.npz ...", config.output_fingerprint)
-    sections = "fingerprint,aafs" if aafs is not None else "fingerprint"
+    sections = []
+    if autosomal_fingerprint is not None:
+        sections.append("autosomal_fingerprint")
+    if autosomal_aafs is not None:
+        sections.append("autosomal_aafs")
+    if chrx_fingerprint is not None:
+        sections.append("chrx_fingerprint")
+    if chrx_aafs is not None:
+        sections.append("chrx_aafs")
     header = np.array(
         [
             "ngs_chew_fingerprint",  # file identifier
-            "2",  # file format version
+            "3",  # file format version
             genome_release,  # genome release
             sample,  # sample name
-            sections,  # sections in the file
+            ",".join(sections),  # sections in the file
         ]
     )
     np.savez_compressed(
         config.output_fingerprint,
         header=header,
-        fingerprint=fingerprint if fingerprint is not None else np.zeros(0),
-        aafs=aafs if aafs is not None else np.zeros(0),
+        autosomal_fingerprint=autosomal_fingerprint
+        if autosomal_fingerprint is not None
+        else np.zeros(0),
+        aafs=autosomal_aafs if autosomal_aafs is not None else np.zeros(0),
+        chrx_fingerprint=chrx_fingerprint if chrx_fingerprint is not None else np.zeros(0),
+        chrx_aafs=chrx_aafs if chrx_aafs is not None else np.zeros(0),
         samtools_idxstats=samtools_idxstats if samtools_idxstats is not None else np.zeros(0),
     )
 
@@ -317,10 +337,17 @@ def run(config: Config):
 
     if config.step_autosomal_snps:
         autosomal_fingerprint, autosomal_aafs = autosomal_snps_step(
-            config, chr_prefix, genome_release
+            config, chr_prefix, "sites", genome_release
         )
     else:
         autosomal_fingerprint, autosomal_aafs = None, None
+
+    if config.step_chrx_snps:
+        chrx_fingerprint, chrx_aafs = autosomal_snps_step(
+            config, chr_prefix, "sitesX", genome_release
+        )
+    else:
+        chrx_fingerprint, chrx_aafs = None, None
 
     if config.step_samtools_idxstats:
         samtools_idxstats_out = samtools_idxstats_step(config)
@@ -328,7 +355,14 @@ def run(config: Config):
         samtools_idxstats_out = None
 
     write_fingerprint(
-        config, genome_release, sample, autosomal_fingerprint, autosomal_aafs, samtools_idxstats_out
+        config,
+        genome_release,
+        sample,
+        autosomal_fingerprint,
+        autosomal_aafs,
+        chrx_fingerprint,
+        chrx_aafs,
+        samtools_idxstats_out,
     )
 
     logger.info("All done. Have a nice day!")
