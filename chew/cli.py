@@ -29,8 +29,19 @@ def cli(ctx: click.Context, verbose: bool):
     help="Write alternate allele fractions to .npz file.",
 )
 @click.option("--input-bam", required=True, help="Path to input BAM file.")
-@click.option("--genome-release", required=False, default="GRCh37", help="Genome release used.")
+@click.option("--genome-release", required=False, default=None, help="Genome release used.")
 @click.option("--max-sites", type=int, default=0, help="Maximal number of sites to consider.")
+@click.option("--write-vcf/--no-write-vcf", default=False, help="Enable writing of call VCF.")
+@click.option(
+    "--step-autosomal-snps/--no-step-autosomal-snps",
+    default=True,
+    help="Enable autosomal SNP step (default: yes)",
+)
+@click.option(
+    "--step-samtools-idxstats/--no-step-samtools-idxstats",
+    default=True,
+    help="Enable samtools idxstats step (default: yes)",
+)
 @click.option("--write-vcf/--no-write-vcf", default=False, help="Enable writing of call VCF.")
 @click.pass_context
 def cli_fingerprint(
@@ -40,8 +51,10 @@ def cli_fingerprint(
     output_fingerprint: str,
     output_aafs: bool,
     input_bam: str,
-    genome_release: str,
+    genome_release: typing.Optional[str],
     max_sites: int,
+    step_autosomal_snps: bool,
+    step_samtools_idxstats: bool,
     write_vcf: bool,
 ):
     config = fingerprint.Config(
@@ -53,6 +66,8 @@ def cli_fingerprint(
         input_bam=input_bam,
         genome_release=genome_release,
         max_sites=max_sites,
+        step_autosomal_snps=step_autosomal_snps,
+        step_samtools_idxstats=step_samtools_idxstats,
         write_vcf=write_vcf,
     )
     fingerprint.run(config)

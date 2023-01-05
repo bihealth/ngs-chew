@@ -70,7 +70,7 @@ jobs:
         run: conda install -y mamba
 
       - name: Install external dependencies with mamba
-        run: mamba install -y bcftools
+        run: mamba install -y bcftools samtools
 
       - name: Save time by installing packages via mamba
         run: mamba install -y pysam pandas scipy numpy
