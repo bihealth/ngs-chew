@@ -216,7 +216,7 @@ def snps_step_call(
     with vcfpy.Reader.from_path(path_calls) as vcf_reader:
         if prefix_fingerprint:
             logger.info("Writing VCF to %s", f"{prefix_fingerprint}.vcf.gz")
-            out_vcf = vcfpy.Writer.from_path(f"{prefix_fingerprint}.vcf.gz", vcf_reader.header)
+            out_vcf = vcfpy.Writer.from_path(f"{prefix_fingerprint}.{sites_suffix}.vcf.gz", vcf_reader.header)
         else:
             logger.info("Not writing out VCF")
             out_vcf = contextlib.suppress()
@@ -308,7 +308,7 @@ def write_fingerprint(
         autosomal_fingerprint=autosomal_fingerprint
         if autosomal_fingerprint is not None
         else np.zeros(0),
-        aafs=autosomal_aafs if autosomal_aafs is not None else np.zeros(0),
+        autosomal_aafs=autosomal_aafs if autosomal_aafs is not None else np.zeros(0),
         chrx_fingerprint=chrx_fingerprint if chrx_fingerprint is not None else np.zeros(0),
         chrx_aafs=chrx_aafs if chrx_aafs is not None else np.zeros(0),
         samtools_idxstats=samtools_idxstats if samtools_idxstats is not None else np.zeros(0),
