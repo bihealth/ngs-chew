@@ -76,8 +76,12 @@ def run(config: Config):
                 chrx_mask = chrx_fingerprint[0]
                 chrx_is_alt = chrx_fingerprint[1]
                 chrx_hom_alt = chrx_fingerprint[2]
-                import pdb; pdb.set_trace()
-                num_homs = np.count_nonzero(chrx_hom_alt & chrx_mask) + np.count_nonzero(~chrx_is_alt & chrx_mask)
+                import pdb
+
+                pdb.set_trace()
+                num_homs = np.count_nonzero(chrx_hom_alt & chrx_mask) + np.count_nonzero(
+                    ~chrx_is_alt & chrx_mask
+                )
                 if num_homs > 0:
                     chrx_het_hom = np.count_nonzero(chrx_is_alt & chrx_mask) / num_homs
                 else:

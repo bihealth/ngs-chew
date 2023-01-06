@@ -164,8 +164,10 @@ def analyze_bam_header(
     return sample_name, prefix, genome_release
 
 
-def write_sites_bed(args, prefix, genome_release, tmp_dir):
-    path_gz = os.path.join(os.path.dirname(__file__), "data", "%s_sites.bed.gz" % genome_release)
+def write_sites_bed(args, prefix, sites_suffix, genome_release, tmp_dir):
+    path_gz = os.path.join(
+        os.path.dirname(__file__), "data", f"{genome_release}_{sites_suffix}.bed.gz"
+    )
     path_bed = os.path.join(tmp_dir, "sites.bed")
     logger.info("Writing sites BED file to %s", path_bed)
     # TODO: handle "chr" prefix...
@@ -216,7 +218,9 @@ def snps_step_call(
     with vcfpy.Reader.from_path(path_calls) as vcf_reader:
         if prefix_fingerprint:
             logger.info("Writing VCF to %s", f"{prefix_fingerprint}.vcf.gz")
-            out_vcf = vcfpy.Writer.from_path(f"{prefix_fingerprint}.{sites_suffix}.vcf.gz", vcf_reader.header)
+            out_vcf = vcfpy.Writer.from_path(
+                f"{prefix_fingerprint}.{sites_suffix}.vcf.gz", vcf_reader.header
+            )
         else:
             logger.info("Not writing out VCF")
             out_vcf = contextlib.suppress()
@@ -258,7 +262,7 @@ def autosomal_snps_step(
     genome_release: str,
 ):
     with tempfile.TemporaryDirectory() as tmp_dir:
-        path_sites = write_sites_bed(config, chr_prefix, genome_release, tmp_dir)
+        path_sites = write_sites_bed(config, chr_prefix, sites_suffix, genome_release, tmp_dir)
         path_calls = call_sites(config, path_sites, tmp_dir)
         fingerprint, aafs = snps_step_call(
             config,
