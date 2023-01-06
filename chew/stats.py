@@ -5,8 +5,6 @@ from logzero import logger
 import numpy as np
 from tqdm import tqdm
 
-from chew.compare import load_fingerprint_with_aafs
-
 
 @attrs.frozen
 class Config:
@@ -50,13 +48,11 @@ def extract_header(container) -> Header:
 def run(config: Config):
     logger.info("Writing statistics file...")
     with open(config.output, "wt") as outputf:
-        header = ["sample", "hets", "hom_alts", "hom_refs", "mask", "var_het", "chrx_het_hom"]
+        header_lines = ["sample", "hets", "hom_alts", "hom_refs", "mask", "var_het", "chrx_het_hom"]
 
-        print("\t".join(header), file=outputf)
+        print("\t".join(header_lines), file=outputf)
         for container in map(load_fingerprint_all, tqdm(config.fingerprints)):
             header = extract_header(container)
-            print(header)
-            print(list(container.keys()))
 
             autosomal_fingerprint = container["autosomal_fingerprint"]
             autosomal_mask = autosomal_fingerprint[0]
