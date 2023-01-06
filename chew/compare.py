@@ -1,4 +1,3 @@
-import math
 import typing
 
 import attrs
@@ -32,7 +31,7 @@ def relatedness(lhs, rhs):
     # Obtain shortcuts...
     lhs_mask = lhs[0]
     lhs_is_alt = lhs[1]
-    lhs_hom_alt = rhs[2]
+    lhs_hom_alt = lhs[2]
     rhs_mask = rhs[0]
     rhs_is_alt = rhs[1]
     rhs_hom_alt = rhs[2]
@@ -49,7 +48,18 @@ def relatedness(lhs, rhs):
     het_ij = np.count_nonzero(arr_ij)
     n_ibs0 = np.count_nonzero(((lhs_ref & rhs_hom_alt) | (rhs_ref & lhs_hom_alt)) & mask)
     # Compute relateness
-    rel = (het_ij - 2 * n_ibs0) / math.sqrt(het_i * het_j)
+    #
+    # Note that the peddy article gives the formula in this comment but uses the formula
+    # from the code below.
+    #
+    #   rel = (het_ij - 2 * n_ibs0) / math.sqrt(het_i * het_j)
+    if het_i == 0 and het_j == 0:
+        bot = -1
+    elif het_i == 0 or het_j == 0:
+        bot = max(het_i, het_j)
+    else:
+        bot = min(het_i, het_j)
+    rel = (het_ij - 2 * n_ibs0) / bot
     return n_ibs0, rel, np.count_nonzero(mask)
 
 
