@@ -1,2 +1,0 @@
-sample	hets	hom_alts	hom_refs	mask	var_het	chrx_het_hom
-10_0091-N1-DNA1-WES1	5505	1932	17933	23438	0.005801600966839239	0.25
