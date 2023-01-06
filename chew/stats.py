@@ -5,6 +5,8 @@ from logzero import logger
 import numpy as np
 from tqdm import tqdm
 
+from chew.common import CHROM_LENS_GRCH37, CHROM_LENS_GRCH38
+
 
 @attrs.frozen
 class Config:
@@ -45,10 +47,37 @@ def extract_header(container) -> Header:
     )
 
 
+def parse_samtools_idxstats(samtools_idxstats: str) -> typing.Tuple[float, float]:
+    chrom_reads = {}
+    for line in samtools_idxstats.splitlines():
+        arr = line.split("\t")
+        chrom = arr[0]
+        reads = int(arr[2])
+        if chrom in CHROM_LENS_GRCH37 or chrom in CHROM_LENS_GRCH38:
+            chrom_reads[chrom] = reads
+    total_count = sum(chrom_reads.values())
+    chrx_count = chrom_reads.get("X", chrom_reads.get("chrX", 0))
+    chry_count = chrom_reads.get("Y", chrom_reads.get("chrY", 0))
+    if not total_count:
+        return 0.0, 0.0
+    else:
+        return chrx_count / total_count, chry_count / total_count
+
+
 def run(config: Config):
     logger.info("Writing statistics file...")
     with open(config.output, "wt") as outputf:
-        header_lines = ["sample", "hets", "hom_alts", "hom_refs", "mask", "var_het", "chrx_het_hom"]
+        header_lines = [
+            "sample",
+            "hets",
+            "hom_alts",
+            "hom_refs",
+            "mask",
+            "var_het",
+            "chrx_het_hom",
+            "chrx_frac",
+            "chry_frac",
+        ]
 
         print("\t".join(header_lines), file=outputf)
         for container in map(load_fingerprint_all, tqdm(config.fingerprints)):
@@ -82,6 +111,12 @@ def run(config: Config):
             else:
                 chrx_het_hom = None
 
+            if "samtools_idxstats" in header.fields:
+                chrx_frac, chry_frac = parse_samtools_idxstats(str(container["samtools_idxstats"]))
+            else:
+                chrx_frac = None
+                chry_frac = None
+
             row = [
                 header.sample,
                 np.count_nonzero(autosomal_is_alt & autosomal_mask),
@@ -90,5 +125,7 @@ def run(config: Config):
                 np.count_nonzero(autosomal_mask),
                 var_het or "-",
                 chrx_het_hom or "-",
+                chrx_frac or "-",
+                chry_frac or "-",
             ]
             print("\t".join(map(str, row)), file=outputf)
