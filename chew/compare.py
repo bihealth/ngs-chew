@@ -19,9 +19,9 @@ class Config:
 def load_fingerprint(path, *, load_aafs: bool = False):
     nparr = np.load(path)
     if load_aafs:
-        return nparr["header"][3], nparr["fingerprint"], nparr.get("aafs")
+        return nparr["header"][3], nparr["autosomal_fingerprint"], nparr.get("autosomal_aafs")
     else:
-        return nparr["header"][3], nparr["fingerprint"]
+        return nparr["header"][3], nparr["autosomal_fingerprint"]
 
 
 def load_fingerprint_with_aafs(path):

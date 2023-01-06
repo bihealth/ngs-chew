@@ -38,6 +38,11 @@ def cli(ctx: click.Context, verbose: bool):
     help="Enable autosomal SNP step (default: yes)",
 )
 @click.option(
+    "--step-chrx-snps/--no-step-chrx-snps",
+    default=True,
+    help="Enable chrX SNP step (default: yes)",
+)
+@click.option(
     "--step-samtools-idxstats/--no-step-samtools-idxstats",
     default=True,
     help="Enable samtools idxstats step (default: yes)",
@@ -54,6 +59,7 @@ def cli_fingerprint(
     genome_release: typing.Optional[str],
     max_sites: int,
     step_autosomal_snps: bool,
+    step_chrx_snps: bool,
     step_samtools_idxstats: bool,
     write_vcf: bool,
 ):
@@ -67,6 +73,7 @@ def cli_fingerprint(
         genome_release=genome_release,
         max_sites=max_sites,
         step_autosomal_snps=step_autosomal_snps,
+        step_chrx_snps=step_chrx_snps,
         step_samtools_idxstats=step_samtools_idxstats,
         write_vcf=write_vcf,
     )
