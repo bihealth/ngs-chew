@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.7.0](https://www.github.com/bihealth/ngs-chew/compare/v0.6.0...v0.7.0) (2023-01-10)
+
+
+### Features
+
+* collect chrX SNP information for sex identification ([#12](https://www.github.com/bihealth/ngs-chew/issues/12)) ([#15](https://www.github.com/bihealth/ngs-chew/issues/15)) ([b210312](https://www.github.com/bihealth/ngs-chew/commit/b210312b40a3aad8e524a8765a8e8b2ef8d0aa8f))
+* gather samtools idxstats output ([#13](https://www.github.com/bihealth/ngs-chew/issues/13)) ([aafa3cf](https://www.github.com/bihealth/ngs-chew/commit/aafa3cf7ca94005828c5ce2dd9927d3454291d81))
+* interpret samtools idxstats output ([#18](https://www.github.com/bihealth/ngs-chew/issues/18)) ([50cd8fd](https://www.github.com/bihealth/ngs-chew/commit/50cd8fdd72d48bc7330ca5afdb5b108210cc3f75))
+* using coding regions for chrX sites ([#20](https://www.github.com/bihealth/ngs-chew/issues/20)) ([#21](https://www.github.com/bihealth/ngs-chew/issues/21)) ([6c50688](https://www.github.com/bihealth/ngs-chew/commit/6c506887f809f9fc834e00f290a17097e6486a67))
+* write out ngs-chew version to header ([#19](https://www.github.com/bihealth/ngs-chew/issues/19)) ([c0f2de5](https://www.github.com/bihealth/ngs-chew/commit/c0f2de5ff310410c37d3000533cf45d1c062a520))
+
+
+### Bug Fixes
+
+* use actual peddy formulat for relatedness ([#17](https://www.github.com/bihealth/ngs-chew/issues/17)) ([cea0b6c](https://www.github.com/bihealth/ngs-chew/commit/cea0b6cda3cfcec795172ef95571458ed74d3cab))
+
 ## [0.6.0](https://www.github.com/bihealth/ngs-chew/compare/v0.5.1...v0.6.0) (2023-01-02)
 
 
