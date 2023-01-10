@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.7.1](https://www.github.com/bihealth/ngs-chew/compare/v0.7.0...v0.7.1) (2023-01-10)
+
+
+### Bug Fixes
+
+* fixing chrX sites BED files ([#22](https://www.github.com/bihealth/ngs-chew/issues/22)) ([c0fb33e](https://www.github.com/bihealth/ngs-chew/commit/c0fb33e1a7261cfe234dba4938725be6755fb5f1))
+
 ## [0.7.0](https://www.github.com/bihealth/ngs-chew/compare/v0.6.0...v0.7.0) (2023-01-10)
 
 
