@@ -14,6 +14,7 @@ import numpy.typing
 import pysam
 import vcfpy
 
+import chew
 from chew.common import CHROM_LENS_GRCH37, CHROM_LENS_GRCH38, CHROM_LENS_HG19
 
 #: Key to use for GRCh37 release.
@@ -245,7 +246,8 @@ def write_fingerprint(
     header = np.array(
         [
             "ngs_chew_fingerprint",  # file identifier
-            "3",  # file format version
+            "4",  # file format version
+            chew.__version__,
             genome_release,  # genome release
             sample,  # sample name
             ",".join(sections),  # sections in the file
