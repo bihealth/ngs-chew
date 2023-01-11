@@ -184,12 +184,19 @@ def cli_plot_var_het(
 if have_dash_installed:
 
     @cli.command("serve", help="Run report server")
+    @click.option(
+        "--annos-tsv",
+        default=None,
+        required=False,
+        help="Optional TSV file with further annotations",
+    )
     @click.option("--strip-suffix", default="", help="Suffix to strip from sample names")
     @click.argument("cohort_ped")
     @click.argument("fingerprints", nargs=-1)
     @click.pass_context
     def cli_serve(
         ctx: click.Context,
+        annos_tsv: typing.Optional[str],
         strip_suffix: str,
         cohort_ped: str,
         fingerprints: typing.List[str],
@@ -205,5 +212,6 @@ if have_dash_installed:
             strip_suffix=strip_suffix,
             cohort_ped=cohort_ped,
             fingerprints=fingerprints,
+            annos_tsv=annos_tsv,
         )
         serve.run(config)

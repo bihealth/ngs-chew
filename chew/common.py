@@ -1,6 +1,11 @@
 """Commonly used code"""
 
 #: Chromosome lengths in GRCh37.
+import enum
+import typing
+import attrs
+
+
 CHROM_LENS_GRCH37 = {
     "1": 249250621,
     "2": 243199373,
@@ -58,3 +63,52 @@ CHROM_LENS_GRCH38 = {
     "chrX": 156040895,
     "chrY": 57227415,
 }
+
+
+class Sex(enum.Enum):
+    UNKNOWN = "unknown"
+    MALE = "male"
+    FEMALE = "female"
+
+
+PED_SEX_MAP = {
+    "0": Sex.UNKNOWN,
+    "1": Sex.MALE,
+    "2": Sex.FEMALE,
+}
+
+
+class DiseaseState(enum.Enum):
+    UNKNOWN = "unknown"
+    UNAFFECTED = "affected"
+    AFFECTED = "unaffected"
+
+
+PED_DISEASE_MAP = {
+    "0": DiseaseState.UNKNOWN,
+    "1": DiseaseState.UNAFFECTED,
+    "2": DiseaseState.AFFECTED,
+}
+
+
+@attrs.frozen
+class PedigreeMember:
+    family_name: str
+    name: str
+    father: str
+    mother: str
+    sex: Sex
+    disease_state: DiseaseState
+
+
+def pedigree_member_from_tsv(arr: typing.List[str]) -> PedigreeMember:
+    if len(arr) < 6:
+        raise Exception("TSV array must have at least 6 fields")
+    return PedigreeMember(
+        family_name=arr[0],
+        name=arr[1],
+        father=arr[2],
+        mother=arr[3],
+        sex=PED_SEX_MAP.get(arr[4], Sex.UNKNOWN),
+        disease_state=PED_DISEASE_MAP.get(arr[5], DiseaseState.UNKNOWN),
+    )
