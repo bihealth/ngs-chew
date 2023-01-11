@@ -11,6 +11,7 @@ import dash_bootstrap_components as dbc
 from dash import dash_table
 from dash.dash_table.Format import Format, Scheme
 from logzero import logger
+import numpy as np
 import pandas as pd
 import plotly.express as px
 from tqdm import tqdm
@@ -188,17 +189,23 @@ def run(config: Config):
         ],
     )
     def render_scatter_plot(dim_h, dim_v, color, symbol, marker_size):
-        fig = px.scatter(
+        if np.issubdtype(df[dim_h].dtype, np.number):
+            px_func = px.scatter
+            px_kwargs = {"symbol": symbol}
+        else:
+            px_func = px.strip
+            px_kwargs = {}
+        fig = px_func(
             df,
             x=dim_h,
             y=dim_v,
             color=color,
-            symbol=symbol,
             hover_data=["name", "sex"],
             labels={
                 dim_h: COLUMN_LABELS.get(dim_h, dim_h),
                 dim_v: COLUMN_LABELS.get(dim_v, dim_v),
             },
+            **px_kwargs,
         )
         fig.update_traces(marker={"size": int(marker_size)})
         return dcc.Graph(figure=fig)
@@ -261,8 +268,10 @@ def run(config: Config):
                     html.Div(
                         [
                             dbc.Select(
-                                options=[{"label": str(i), "value": str(i)} for i in range(1, 11)],
-                                value="2",
+                                options=[
+                                    {"label": str(2 * i), "value": str(2 * i)} for i in range(1, 11)
+                                ],
+                                value="6",
                                 id="stats-scatter-select-marker-size",
                             ),
                             html.Label(
