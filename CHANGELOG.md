@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://www.github.com/bihealth/ngs-chew/compare/v0.7.1...v0.8.0) (2023-01-16)
+
+
+### Features
+
+* roh calling with "bcftools roh" ([#25](https://www.github.com/bihealth/ngs-chew/issues/25)) ([a4af62c](https://www.github.com/bihealth/ngs-chew/commit/a4af62ced20bee37b4342d58aca48aaf9d269e68))
+
 ### [0.7.1](https://www.github.com/bihealth/ngs-chew/compare/v0.7.0...v0.7.1) (2023-01-10)
 
 
