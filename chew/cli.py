@@ -2,7 +2,7 @@ import typing
 
 import click
 
-from chew import __version__, compare, fingerprint, plot_compare, plot_var_het, stats, roh
+from chew import __version__, compare, fingerprint, plot_compare, plot_var_het, stats
 
 
 @click.group()
@@ -47,6 +47,11 @@ def cli(ctx: click.Context, verbose: bool):
     default=True,
     help="Enable samtools idxstats step (default: yes)",
 )
+@click.option(
+    "--step-bcftools-roh/--no-step-bcftools-roh",
+    default=True,
+    help="Enable bcftools roh step (default: yes)",
+)
 @click.option("--write-vcf/--no-write-vcf", default=False, help="Enable writing of call VCF.")
 @click.pass_context
 def cli_fingerprint(
@@ -61,6 +66,7 @@ def cli_fingerprint(
     step_autosomal_snps: bool,
     step_chrx_snps: bool,
     step_samtools_idxstats: bool,
+    step_bcftools_roh: bool,
     write_vcf: bool,
 ):
     config = fingerprint.Config(
@@ -75,6 +81,7 @@ def cli_fingerprint(
         step_autosomal_snps=step_autosomal_snps,
         step_chrx_snps=step_chrx_snps,
         step_samtools_idxstats=step_samtools_idxstats,
+        step_bcftools_roh=step_bcftools_roh,
         write_vcf=write_vcf,
     )
     fingerprint.run(config)
@@ -164,20 +171,3 @@ def cli_plot_var_het(
         stats_out=stats_out,
     )
     plot_var_het.run(config)
-
-
-@cli.command("bcftools_roh", help="Run 'bcftools roh' on variants from fingerprint")
-@click.argument("input_npz")
-@click.argument("output")
-@click.pass_context
-def cli_roh(
-    ctx: click.Context,
-    input_npz: str,
-    output: str,
-):
-    config = roh.Config(
-        verbosity=2 if ctx.obj["verbose"] else 1,
-        input_npz=input_npz,
-        output=output,
-    )
-    roh.run(config)

@@ -15,6 +15,7 @@ import pysam
 import vcfpy
 
 import chew
+from chew import roh
 from chew.common import CHROM_LENS_GRCH37, CHROM_LENS_GRCH38, CHROM_LENS_HG19
 
 #: Key to use for GRCh37 release.
@@ -57,6 +58,8 @@ class Config:
     #: Whether to collect "samtools idxstats" output.  Only applicable when extracting information
     #: from BAM files.
     step_samtools_idxstats: bool
+    #: Whether to run "bcftools roh"
+    step_bcftools_roh: bool
 
 
 def analyze_bam_header(
@@ -230,6 +233,7 @@ def write_fingerprint(
     chrx_fingerprint: typing.Optional[numpy.typing.NDArray],
     chrx_aafs: typing.Optional[typing.List[float]],
     samtools_idxstats: typing.Optional[str],
+    roh_txt: typing.Optional[roh.RohTxtContents],
 ):
     logger.info("Writing fingerprint to %s.npz ...", config.output_fingerprint)
     sections = []
@@ -243,6 +247,8 @@ def write_fingerprint(
         sections.append("chrx_aafs")
     if samtools_idxstats is not None:
         sections.append("samtools_idxstats")
+    if roh_txt is not None:
+        sections.append("bcftools_roh")
     header = np.array(
         [
             "ngs_chew_fingerprint",  # file identifier
@@ -263,6 +269,10 @@ def write_fingerprint(
         chrx_fingerprint=chrx_fingerprint if chrx_fingerprint is not None else np.zeros(0),
         chrx_aafs=chrx_aafs if chrx_aafs is not None else np.zeros(0),
         samtools_idxstats=samtools_idxstats if samtools_idxstats is not None else np.zeros(0),
+        roh_chroms=roh_txt.chroms if roh_txt is not None else np.zeros(0),
+        roh_starts=roh_txt.starts if roh_txt is not None else np.zeros(0),
+        roh_ends=roh_txt.ends if roh_txt is not None else np.zeros(0),
+        roh_quals=roh_txt.quals if roh_txt is not None else np.zeros(0),
     )
 
 
@@ -276,6 +286,14 @@ def samtools_idxstats_step(config: Config):
         result_log = result_log[:100] + "[...]"
     logger.info("Result is (truncated after 100 chars for log) \n%s", result_log)
     return result
+
+
+def bcftools_roh_step(sample: str, release: str, autosomal_fingerprint) -> roh.RohTxtContents:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        logger.info("Prepare VCF files...")
+        path_vcf = roh.write_vcf(str(tmpdir), sample, release, autosomal_fingerprint)
+        path_txt = roh.run_roh(str(tmpdir), path_vcf)
+        return roh.parse_roh_txt(path_txt)
 
 
 def run(config: Config):
@@ -305,6 +323,13 @@ def run(config: Config):
     else:
         samtools_idxstats_out = None
 
+    if config.step_bcftools_roh:
+        roh_txt_contents = bcftools_roh_step(
+            sample=sample, release=genome_release, autosomal_fingerprint=autosomal_fingerprint
+        )
+    else:
+        roh_txt_contents = None
+
     write_fingerprint(
         config,
         genome_release,
@@ -314,6 +339,7 @@ def run(config: Config):
         chrx_fingerprint,
         chrx_aafs,
         samtools_idxstats_out,
+        roh_txt_contents,
     )
 
     logger.info("All done. Have a nice day!")
