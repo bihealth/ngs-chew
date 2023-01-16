@@ -18,7 +18,8 @@ class Config:
 @attrs.frozen
 class Header:
     magic_string: str
-    version: str
+    format_version: str
+    chew_version: str
     release: str
     sample: str
     fields: typing.Tuple[str, ...]
@@ -33,17 +34,18 @@ def extract_header(container) -> Header:
     version = container["header"][1]
     if magic_string != "ngs_chew_fingerprint":
         raise Exception(f"Wrong file format {magic_string}")
-    if version != "3":
-        raise Exception(f"Wrong version {version}, must be '3'")
+    if version != "4":
+        raise Exception(f"Wrong version {version}, must be '4'")
     if len(container["header"]) < 5:
         raise Exception("Expected at least 5 fields in header")
 
     return Header(
         magic_string=container["header"][0],
-        version=container["header"][1],
-        release=container["header"][2],
-        sample=container["header"][3],
-        fields=tuple(container["header"][4].split(",")),
+        format_version=container["header"][1],
+        chew_version=container["header"][2],
+        release=container["header"][3],
+        sample=container["header"][4],
+        fields=tuple(container["header"][5].split(",")),
     )
 
 

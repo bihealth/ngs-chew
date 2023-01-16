@@ -2,7 +2,7 @@ import typing
 
 import click
 
-from chew import __version__, compare, fingerprint, plot_compare, plot_var_het, stats
+from chew import __version__, compare, fingerprint, plot_compare, plot_var_het, stats, roh
 
 
 @click.group()
@@ -164,3 +164,20 @@ def cli_plot_var_het(
         stats_out=stats_out,
     )
     plot_var_het.run(config)
+
+
+@cli.command("bcftools_roh", help="Run 'bcftools roh' on variants from fingerprint")
+@click.argument("input_npz")
+@click.argument("output")
+@click.pass_context
+def cli_roh(
+    ctx: click.Context,
+    input_npz: str,
+    output: str,
+):
+    config = roh.Config(
+        verbosity=2 if ctx.obj["verbose"] else 1,
+        input_npz=input_npz,
+        output=output,
+    )
+    roh.run(config)
