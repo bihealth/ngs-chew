@@ -336,6 +336,7 @@ def run(config: Config):
             df_ped.set_index("name")
             .join(df_chrom_dosage_plot_tmp.set_index("sample_name"))
             .reset_index()
+            .rename(columns={"index": "name"})
         )
         if config.annos_tsv:
             logger.info("Loading annotations TSV %s", config.annos_tsv)
@@ -346,13 +347,14 @@ def run(config: Config):
                 df_chrom_dosage_plot.set_index("name")
                 .join(df_anno.set_index(df_anno_0))
                 .reset_index()
+                .rename(columns={"index": "name"})
             )
         fig = px.strip(
             df_chrom_dosage_plot,
             x="chrom",
             y="dosage",
             color=color,
-            hover_data=["index", "dosage"],
+            hover_data=["name", "dosage"],
         )
         fig.update_traces(marker={"size": int(marker_size)})
         return dcc.Graph(figure=fig)
