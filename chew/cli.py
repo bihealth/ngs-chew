@@ -6,7 +6,7 @@ from logzero import logger
 from chew import __version__, compare, fingerprint, plot_compare, plot_var_het, stats
 
 try:
-    import dash
+    import dash  # noqa
 
     have_dash_installed = True
 except ImportError:

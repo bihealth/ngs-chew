@@ -3,8 +3,8 @@
 #: Chromosome lengths in GRCh37.
 import enum
 import typing
-import attrs
 
+import attrs
 
 CHROM_LENS_GRCH37 = {
     "1": 249250621,

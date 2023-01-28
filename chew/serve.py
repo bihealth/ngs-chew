@@ -6,29 +6,22 @@ import typing
 
 import attrs
 import cattrs
-from dash import Dash, Input, Output, State, dcc, html
-import dash_bootstrap_components as dbc
-from dash import dash_table
+from dash import Dash, Input, Output, dash_table, dcc, html
 from dash.dash_table.Format import Format, Scheme
+import dash_bootstrap_components as dbc
 from logzero import logger
 import numpy as np
 import pandas as pd
 import plotly.express as px
 from tqdm import tqdm
+
 from chew.common import (
     CHROM_LENS_GRCH37,
     CHROM_LENS_GRCH38,
     PedigreeMember,
     pedigree_member_from_tsv,
 )
-
-from chew.stats import (
-    SampleStats,
-    compute_chrx_het_hom,
-    compute_sample_stats,
-    extract_header,
-    load_fingerprint_all,
-)
+from chew.stats import compute_sample_stats, extract_header, load_fingerprint_all
 
 
 @attrs.frozen
@@ -265,20 +258,6 @@ def run(config: Config):
         style=SIDEBAR_STYLE,
     )
 
-    nav = dbc.Nav(
-        [
-            dbc.NavItem(dbc.NavLink("Active", active=True, href="#")),
-            dbc.NavItem(dbc.NavLink("A link", href="#")),
-            dbc.NavItem(dbc.NavLink("Another link", href="#")),
-            dbc.NavItem(dbc.NavLink("Disabled", disabled=True, href="#")),
-            dbc.DropdownMenu(
-                [dbc.DropdownMenuItem("Item 1"), dbc.DropdownMenuItem("Item 2")],
-                label="Dropdown",
-                nav=True,
-            ),
-        ]
-    )
-
     content = html.Div(id="page-content", style=CONTENT_STYLE)
 
     app.layout = html.Div([dcc.Location(id="url"), sidebar, content])
@@ -331,7 +310,9 @@ def run(config: Config):
             "dosage",
         )
         df_chrom_dosage_plot_tmp["chrom"] = df_chrom_dosage_plot_tmp["chrom"].str.upper()
-        df_chrom_dosage_plot_tmp["chrom"] = df_chrom_dosage_plot_tmp["chrom"].str.replace("CHR_", "")
+        df_chrom_dosage_plot_tmp["chrom"] = df_chrom_dosage_plot_tmp["chrom"].str.replace(
+            "CHR_", ""
+        )
         df_chrom_dosage_plot = (
             df_ped.set_index("name")
             .join(df_chrom_dosage_plot_tmp.set_index("sample_name"))
