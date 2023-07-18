@@ -1,5 +1,12 @@
 """Commonly used code"""
 
+import gzip
+import os
+import typing
+
+import attrs
+from logzero import logger
+
 #: Chromosome lengths in GRCh37.
 CHROM_LENS_GRCH37 = {
     "1": 249250621,
@@ -58,3 +65,33 @@ CHROM_LENS_GRCH38 = {
     "chrX": 156040895,
     "chrY": 57227415,
 }
+
+
+@attrs.frozen
+class Site:
+    chrom: str
+    pos: int
+    ref: str
+    alt: str
+
+
+def load_sites(genome_release: str) -> typing.List[Site]:
+    logger.info("Loading sites .bed.gz for %s", genome_release)
+    path_gz = os.path.join(os.path.dirname(__file__), "data", f"{genome_release}_sites.bed.gz")
+    result = []
+    with gzip.open(path_gz, "rt") as inputf:
+        for line in inputf:
+            arr = line.split("\t")
+            # We construct sites with arbitrary REF/ALT as bcftools roh does not
+            # interpret them but only GT.
+            result.append(
+                Site(
+                    chrom=arr[0],
+                    pos=int(arr[1]) + 1,
+                    ref="N",
+                    alt="A",
+                )
+            )
+    logger.info("  finished reading %d sites", len(result))
+    logger.info("  first = %s, last = %s", result[0], result[-1])
+    return result
