@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.8.1](https://www.github.com/bihealth/ngs-chew/compare/v0.8.0...v0.8.1) (2023-07-18)
+
+
+### Bug Fixes
+
+* sites for GRCh38 ([#24](https://www.github.com/bihealth/ngs-chew/issues/24)) ([#39](https://www.github.com/bihealth/ngs-chew/issues/39)) ([79773ef](https://www.github.com/bihealth/ngs-chew/commit/79773ef0e829184e763aee61373ae46f6ea83ed5))
+
 ## [0.8.0](https://www.github.com/bihealth/ngs-chew/compare/v0.7.1...v0.8.0) (2023-01-16)
 
 
