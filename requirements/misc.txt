@@ -1,0 +1,9 @@
+-r dev.txt
+
+snakemake
+snakefmt
+jupyterlab
+scikit-learn
+polars
+matplotlib
+plotly-express
