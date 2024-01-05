@@ -1,15 +1,13 @@
-import gzip
 import os
 import shlex
 import subprocess
-import typing
 
 import attrs
 from logzero import logger
 import numpy.typing as npt
 import vcfpy
 
-from chew.common import CHROM_LENS_GRCH37, CHROM_LENS_GRCH38
+from chew.common import CHROM_LENS_GRCH37, CHROM_LENS_GRCH38, load_sites
 
 #: Use this value for genotype likelyhood (FORMAT/PL)
 BCFTOOLS_ROH_PL = 30
@@ -41,27 +39,6 @@ class Site:
     pos: int
     ref: str
     alt: str
-
-
-def load_sites(genome_release: str) -> typing.List[Site]:
-    logger.info("Loading sites .bed.gz")
-    path_gz = os.path.join(os.path.dirname(__file__), "data", f"{genome_release}_sites.bed.gz")
-    result = []
-    with gzip.open(path_gz, "rt") as inputf:
-        for lineno, line in enumerate(inputf):
-            arr = line.split("\t")
-            # We construct sites with arbitrary REF/ALT as bcftools roh does not
-            # interpret them but only GT.
-            result.append(
-                Site(
-                    chrom=arr[0],
-                    pos=int(arr[1]) + 1,
-                    ref="N",
-                    alt="A",
-                )
-            )
-    logger.info("  finished reading %d sites", len(result))
-    return result
 
 
 def create_vcf_header(sample: str, release: str) -> vcfpy.Header:

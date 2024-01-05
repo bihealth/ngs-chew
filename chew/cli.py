@@ -23,7 +23,7 @@ def cli(ctx: click.Context, verbose: bool):
     ctx.obj["verbose"] = verbose
 
 
-@cli.command("fingerprint", help="Compute fingerprint to numpy .npz files.")
+@cli.command("fingerprint", help="Compute fingerprint to numpy .npz files.")  # type: ignore[attr-defined]
 @click.option("--min-coverage", type=int, default=5, help="Minimal required coverage.")
 @click.option("--reference", required=True, help="Path to reference FASTA file.")
 @click.option(
@@ -95,7 +95,7 @@ def cli_fingerprint(
     fingerprint.run(config)
 
 
-@cli.command("compare", help="Perform fingeprint comparison.")
+@cli.command("compare", help="Perform fingeprint comparison.")  # type: ignore[attr-defined]
 @click.option(
     "--output-prefix", type=str, default="chew-comparison", help="Path to comparison file."
 )
@@ -120,7 +120,7 @@ def cli_compare(
     compare.run(config)
 
 
-@cli.command("stats", help="Compute statistics from fingerprint .npz files.")
+@cli.command("stats", help="Compute statistics from fingerprint .npz files.")  # type: ignore[attr-defined]
 @click.option("--output", default="chew-stats.txt", help="Path to output file.")
 @click.argument("fingerprints", nargs=-1)
 @click.pass_context
@@ -137,7 +137,7 @@ def cli_stats(
     stats.run(config)
 
 
-@cli.command("plot-compare", help="Plot result of 'ngs-chew compare'.")
+@cli.command("plot-compare", help="Plot result of 'ngs-chew compare'.")  # type: ignore[attr-defined]
 @click.option(
     "--title", default="NGS Chew Comparison Plot", help="title to use for the output HTML file."
 )
@@ -159,7 +159,7 @@ def cli_plot_compare(
     plot_compare.run(config)
 
 
-@cli.command("plot-var-het", help="Plot var(het) metric from .npz files.")
+@cli.command("plot-var-het", help="Plot var(het) metric from .npz files.")  # type: ignore[attr-defined]
 @click.option(
     "--title", default="NGS Chew var(het) Plot", help="title to use for the output HTML file."
 )

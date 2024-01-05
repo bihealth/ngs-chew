@@ -16,7 +16,12 @@ import vcfpy
 
 import chew
 from chew import roh
-from chew.common import CHROM_LENS_GRCH37, CHROM_LENS_GRCH38, CHROM_LENS_HG19
+from chew.common import (
+    CHROM_LENS_GRCH37,
+    CHROM_LENS_GRCH38,
+    CHROM_LENS_HG19,
+    load_sites,
+)
 
 #: Key to use for GRCh37 release.
 RELEASE_37 = "GRCh37"
@@ -155,12 +160,10 @@ def snps_step_call(
 ):
     bed_file = f"{genome_release}_{sites_suffix}.bed.gz"
     logger.info("Reading sites BED (%s)...", bed_file)
-    path_gz = os.path.join(os.path.dirname(__file__), "data", bed_file)
-    with gzip.open(path_gz, "rt") as inputf:
-        sites = {}
-        for line in inputf:
-            arr = line.strip().split("\t")
-            sites["%s%s:%s" % (chr_prefix, arr[0], int(arr[1]) + 1)] = (0, 0, float("nan"))
+    sites = {
+        "%s%s:%s" % (chr_prefix, site.chrom, site.pos): (0, 0, float("nan"))
+        for site in load_sites(genome_release)
+    }
     logger.info("Converting VCF to fingerprint...")
     with vcfpy.Reader.from_path(path_calls) as vcf_reader:
         if prefix_fingerprint:
