@@ -82,3 +82,5 @@ jobs:
         run: |
           pytest
           coverage report
+
+      - uses: codecov/codecov-action@v3
