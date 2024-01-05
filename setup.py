@@ -35,6 +35,7 @@ with open("CHANGELOG.md") as history_file:
 
 test_requirements = parse_requirements("requirements/test.txt")
 install_requirements = parse_requirements("requirements/base.txt")
+serve_requirements = parse_requirements("requirements/serve.txt")
 
 
 def bash_scripts(names):
@@ -60,6 +61,8 @@ setup(
     description="NGS Chew",
     entry_points={"console_scripts": (("ngs-chew=chew.cli:cli",),)},
     install_requires=install_requirements,
+    tests_require=test_requirements,
+    extras_require={"serve": serve_requirements},
     license="MIT license",
     long_description=readme + "\n\n" + history,
     long_description_content_type="text/markdown",
@@ -69,7 +72,6 @@ setup(
     packages=find_packages(),
     package_dir={"chew": "chew"},
     test_suite="tests",
-    tests_require=test_requirements,
     url="https://github.com/bihealth/ngs-chew",
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),

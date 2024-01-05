@@ -1,8 +1,16 @@
 import typing
 
 import click
+from logzero import logger
 
 from chew import __version__, compare, fingerprint, plot_compare, plot_var_het, stats
+
+try:
+    import dash  # noqa
+
+    have_dash_installed = True
+except ImportError:
+    have_dash_installed = False
 
 
 @click.group()
@@ -171,3 +179,39 @@ def cli_plot_var_het(
         stats_out=stats_out,
     )
     plot_var_het.run(config)
+
+
+if have_dash_installed:
+
+    @cli.command("serve", help="Run report server")  # type: ignore[attr-defined]
+    @click.option(
+        "--annos-tsv",
+        default=None,
+        required=False,
+        help="Optional TSV file with further annotations",
+    )
+    @click.option("--strip-suffix", default="", help="Suffix to strip from sample names")
+    @click.argument("cohort_ped")
+    @click.argument("fingerprints", nargs=-1)
+    @click.pass_context
+    def cli_serve(
+        ctx: click.Context,
+        annos_tsv: typing.Optional[str],
+        strip_suffix: str,
+        cohort_ped: str,
+        fingerprints: typing.List[str],
+    ):
+        if not fingerprints:
+            logger.warn("No fingerprints given!")
+            return
+
+        from chew import serve
+
+        config = serve.Config(
+            verbosity=2 if ctx.obj["verbose"] else 1,
+            strip_suffix=strip_suffix,
+            cohort_ped=cohort_ped,
+            fingerprints=fingerprints,
+            annos_tsv=annos_tsv,
+        )
+        serve.run(config)
