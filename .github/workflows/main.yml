@@ -74,19 +74,13 @@ jobs:
             - numpy
           EOF
 
-      - name: Setup formatting environment
+      - name: Setup micromamba environment
         uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: /tmp/environment.yml
           init-shell: bash
           cache-environment: true
           post-cleanup: none  # breaks otherwise
-
-      - name: Install Python via conda
-        uses: s-weigand/setup-conda@v1
-        with:
-          python-version: ${{ matrix.python-version }}
-          conda-channels: defaults,bioconda,conda-forge
 
       - name: Checkout repository
         uses: actions/checkout@v3
