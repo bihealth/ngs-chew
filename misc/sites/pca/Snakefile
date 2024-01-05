@@ -1,0 +1,106 @@
+rule obtain_calls:
+    output:
+        vcf="raw_data/g1k/genotypes.vcf",
+    params:
+        bed="../../../chew/data/GRCh38_sites.bed.gz",
+    threads: 100
+    shell:
+        r"""
+        set -x
+
+        url()
+        {{
+            echo http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_raw_GT_with_annot/20201028_CCDG_14151_B01_GRM_WGS_2020-08-05_chr$1.recalibrated_variants.vcf.gz
+        }}
+        export -f url
+
+        export TMPDIR=$(mktemp -d)
+        trap "rm -rf $TMPDIR" EXIT
+
+        tabix --only-header $(url 1) \
+        > {output.vcf}
+
+        for i in {{1..22}}; do
+            zgrep "^$i\s" {params.bed} \
+            | sed -e 's/^/chr/' \
+            | sort -k2,2n \
+            > $TMPDIR/chr.$i.bed
+            split -l 10 $TMPDIR/chr.$i.bed $TMPDIR/chr.$i.bed-
+        done
+
+        parallel -k -j {threads} 'i=$(basename {{}} | cut -d . -f 2); tabix -R {{}} $(url $i)' ::: $TMPDIR/chr.*.bed-* \
+        >> {output.vcf}
+        """
+
+
+rule obtain_pedigrees:
+    output:
+        txt="raw_data/g1k/20130606_g1k_3202_samples_ped_population.tsv",
+        txt_founders="raw_data/g1k/founders.tsv",
+    shell:
+        r"""
+        wget -O {output.txt} \
+            http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/20130606_g1k_3202_samples_ped_population.txt
+
+        awk -F ' ' '
+            ((NR > 1) && ($3 == 0) && ($4 == 0))' \
+            {output.txt} \
+        > {output.txt_founders}
+        """
+
+
+rule vcf_to_tsv:
+    input:
+        # vcf="raw_data/g1k/genotypes.vcf",
+        txt_founders="raw_data/g1k/founders.tsv",
+    output:
+        tsv="raw_data/g1k/genotypes.tsv",
+    shell:
+        r"""
+        (
+            echo -en "CHROM\tPOS\tREF\tALT\t"; \
+            cut -d ' ' -f 2 raw_data/g1k/founders.tsv | tr '\n' '\t' | sed -e 's/\t$//g'; \
+            echo; \
+        ) > {output.tsv}
+
+        set +o pipefail
+        bcftools +missing2ref raw_data/g1k/genotypes.vcf \
+        | bcftools view -S <(cut -d ' ' -f 2 raw_data/g1k/founders.tsv) -i '(type="snp")' \
+        | bcftools query -f '%CHROM\t%POS\t%REF\t%ALT[\t%GT]\n' - \
+        | sed -e 's|[2-9]/|1/|g' \
+        | sed -e 's|/[2-9]|/1|g' \
+        | sed -e 's|,.||g' \
+        | sed -e 's|,.||g' \
+        | sed -e 's|,.||g' \
+        | sed -e 's|0/0|0|g' \
+        | sed -e 's|0/1|1|g' \
+        | sed -e 's|1/0|1|g' \
+        | sed -e 's|1/1|2|g' \
+        >> {output.tsv}
+        """
+
+rule join_tsv:
+    input:
+        tsv="raw_data/g1k/genotypes.tsv",
+    output:
+        by_id_tsv="by_id/ids.tsv",
+        tsv="by_id/genotypes.tsv",
+    params:
+        bed="../../../chew/data/GRCh38_sites.bed.gz",
+    shell:
+        r"""
+        echo -e "CHROM_\tPOS0_\tPOS_\tID" \
+        > {output.by_id_tsv}
+        zcat {params.bed} \
+        | sed -e 's/^/chr/' \
+        >> {output.by_id_tsv}
+        cp  {output.by_id_tsv} {output.by_id_tsv}.bak
+
+        qsv join --delimiter $'\t' --left \
+            CHROM_,POS_ {output.by_id_tsv} \
+            CHROM,POS {input.tsv} \
+        | qsv select '!CHROM,POS0_,POS,REF,ALT' - \
+        | sed -e 's/CHROM_/CHROM/g' -e 's/POS_/POS/g' \
+        | tr , '\t' \
+        > {output.tsv}
+        """

@@ -1,0 +1,218 @@
+envvars:
+    "PATH_DBSNP37",  # GRCh37 dbSNP VCF
+    "PATH_DBSNP38",  # GRCh38 dbSNP VCF
+
+
+rule default:
+    input:
+        "output/common_ids.txt",
+        "output/grch37.common.bed",
+        "output/grch38.common.bed",
+
+
+rule raw_data_peddy:
+    output:
+        "raw_data/peddy/{filename}.sites",
+    shell:
+        """
+        wget -O {output} https://github.com/brentp/peddy/raw/master/peddy/{wildcards.filename}.sites
+        """
+
+
+rule sites_to_bed:
+    input:
+        "raw_data/peddy/{filename}.sites",
+    output:
+        bed_header="raw_data/peddy/{filename}.header.bed",
+        bed_noheader="raw_data/peddy/{filename}.bed",
+    shell:
+        r"""
+        echo -e "CHROM\tBEGIN\tEND\tREF\tALT" \
+        > {output.bed_header}
+
+        awk -F : '
+            BEGIN {{
+                OFS="\t";
+            }}
+            {{
+                print $1, $2 - 1, $2, $3, $4
+            }}
+        ' {input} \
+        | LC_ALL=C sort -k1,1V -k2,2n \
+        | tee -a {output.bed_header} \
+        > {output.bed_noheader}
+        """
+
+
+rule extract_dbsnp:
+    input:
+        bed="raw_data/peddy/{filename}.bed",
+    output:
+        vcf="work/dbsnp/{filename}.vcf",
+    params:
+        path_dbsnp=os.environ["PATH_DBSNP37"],
+    shell:
+        r"""
+        set -x
+
+        export TMPDIR=$(mktemp -d)
+        trap "rm -rf $TMPDIR" EXIT
+
+        tabix --only-header {params.path_dbsnp} \
+        > $TMPDIR/dbsnp.vcf
+        (tabix -R {input.bed} {params.path_dbsnp} || true) \
+        | sort -k1,1V -k2,2n \
+        >> $TMPDIR/dbsnp.vcf
+        bgzip $TMPDIR/dbsnp.vcf
+        tabix -f $TMPDIR/dbsnp.vcf.gz
+
+        bcftools sort -T $TMPDIR/bcftools.XXXXXX $TMPDIR/dbsnp.vcf.gz \
+        | bcftools norm -d both \
+        | bcftools norm -m - \
+        > {output.vcf}
+        """
+
+
+rule dbsnp_to_bed:
+    input:
+        vcf="work/dbsnp/{filename}.vcf",
+    output:
+        bed="work/dbsnp/{filename}.bed",
+    shell:
+        r"""
+        echo -e "CHROM_\tBEGIN_\tEND_\tREF_\tALT_\tID" \
+        > {output.bed}
+        bcftools query \
+            -f '%CHROM\t%POS0\t%POS\t%REF\t%ALT\t%ID\n' \
+            {input.vcf} \
+        >> {output.bed}
+        """
+
+
+rule label_sites:
+    input:
+        bed_sites="raw_data/peddy/GRCH37.header.bed",
+        bed_dbsnp="work/dbsnp/GRCH37.bed",
+    output:
+        bed="work/label/grch37.bed",
+    shell:
+        r"""
+        set -x
+
+        export TMPDIR=$(mktemp -d)
+        trap "rm -rf $TMPDIR" EXIT
+
+        qsv join --delimiter $'\t' --left \
+            CHROM,BEGIN,REF,ALT {input.bed_sites} \
+            CHROM_,BEGIN_,REF_,ALT_ {input.bed_dbsnp} \
+        | qsv select CHROM,BEGIN,END,REF,ALT,ID \
+        | tr ',' '\t' \
+        > {output.bed}
+        """
+
+
+rule extract_dbsnp38_vcf:
+    input:
+        bed="work/label/grch37.bed",
+    output:
+        vcf="work/dbsnp/GRCH38.vcf",
+        vcf_gz="work/dbsnp/GRCH38.vcf.gz",
+        tbi="work/dbsnp/GRCH38.vcf.gz.tbi",
+    params:
+        path_dbsnp=os.environ["PATH_DBSNP38"],
+    threads: 8
+    shell:
+        r"""
+        set -x
+
+        export TMPDIR=$(mktemp -d)
+        trap "rm -rf $TMPDIR" EXIT
+
+        tail -n +2 {input.bed} \
+        | cut -f 6 \
+        | sed -e 's/^/\t/' -e 's/$/\t/' \
+        > $TMPDIR/rsids.txt
+
+        tabix --only-header {params.path_dbsnp} \
+        > {output.vcf}
+        parallel -k -j {threads} \
+            'tabix {params.path_dbsnp} {{}} | (fgrep -f $TMPDIR/rsids.txt || true)' ::: $(tabix -l {params.path_dbsnp}) \
+        >> {output.vcf}
+
+        bgzip -c {output.vcf} \
+        > {output.vcf_gz}
+        tabix -f {output.vcf_gz}
+        """
+
+
+rule convert_dbsnp38_vcf_to_bed:
+    input:
+        vcf="work/dbsnp/GRCH38.vcf.gz",
+    output:
+        bed="work/label/grch38.bed",
+    shell:
+        r"""
+        set -x
+
+        export TMPDIR=$(mktemp -d)
+        trap "rm -rf $TMPDIR" EXIT
+
+        set +o pipefail
+
+        echo -e "CHROM\tBEGIN\tEND\tREF\tALT\tID" \
+        > {output.bed}
+        bcftools sort -T $TMPDIR/sort.1.XXXXXX {input.vcf} \
+        | bcftools norm -m -any \
+        | bcftools query \
+            -f '%CHROM\t%POS0\t%POS\t%REF\t%ALT\t%ID\n' \
+        | sort -k1,1V -k2,2n \
+        | uniq \
+        >> {output.bed}
+        """
+
+
+rule extract_common_dbsnp_entries:
+    input:
+        grch37="work/label/grch37.bed",
+        grch38="work/label/grch38.bed",
+    output:
+        common_ids="output/common_ids.txt",
+        grch37="output/grch37.common.bed",
+        grch38="output/grch38.common.bed",
+    shell:
+        r"""
+        set -x
+
+        export TMPDIR=$(mktemp -d)
+        trap "rm -rf $TMPDIR" EXIT
+
+        echo -e "REF_\tID_" \
+        >{output.common_ids}
+        qsv join --delimiter $'\t' \
+            REF,ID {input.grch37} \
+            REF,ID {input.grch38} \
+        | qsv select REF,ID \
+        | tr ',' '\t' \
+        | uniq \
+        | tail -n +2 \
+        >> {output.common_ids}
+
+        qsv join --delimiter $'\t' \
+            REF,ID {input.grch37} \
+            REF_,ID_ {output.common_ids} \
+        | qsv select CHROM,BEGIN,END,ID \
+        | tr ',' '\t' \
+        | tail -n +2 \
+        | LC_ALL=C sort -k4,4 \
+        > {output.grch37}
+
+        qsv join --delimiter $'\t' \
+            REF,ID {input.grch38} \
+            REF_,ID_ {output.common_ids} \
+        | qsv select CHROM,BEGIN,END,ID \
+        | tr ',' '\t' \
+        | tail -n +2 \
+        | uniq \
+        | LC_ALL=C sort -k4,4 \
+        > {output.grch38}
+        """
