@@ -1,4 +1,5 @@
 [![CI](https://github.com/bihealth/ngs-chew/actions/workflows/main.yml/badge.svg)](https://github.com/bihealth/ngs-chew/actions/workflows/main.yml)
+[![Documentation Status](https://readthedocs.org/projects/ngs-chew/badge/?version=latest)](https://ngs-chew.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/bihealth/ngs-chew/graph/badge.svg?token=DMWFL2WA05)](https://codecov.io/gh/bihealth/ngs-chew)
 
 # NGS Chew
