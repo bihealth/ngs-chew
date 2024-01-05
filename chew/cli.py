@@ -183,7 +183,7 @@ def cli_plot_var_het(
 
 if have_dash_installed:
 
-    @cli.command("serve", help="Run report server")
+    @cli.command("serve", help="Run report server")  # type: ignore[attr-defined]
     @click.option(
         "--annos-tsv",
         default=None,

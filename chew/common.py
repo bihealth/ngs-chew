@@ -1,5 +1,6 @@
 """Commonly used code"""
 
+import enum
 import gzip
 import os
 import typing
@@ -8,11 +9,6 @@ import attrs
 from logzero import logger
 
 #: Chromosome lengths in GRCh37.
-import enum
-import typing
-
-import attrs
-
 CHROM_LENS_GRCH37 = {
     "1": 249250621,
     "2": 243199373,
@@ -120,7 +116,7 @@ def pedigree_member_from_tsv(arr: typing.List[str]) -> PedigreeMember:
         disease_state=PED_DISEASE_MAP.get(arr[5], DiseaseState.UNKNOWN),
     )
 
-  
+
 @attrs.frozen
 class Site:
     chrom: str
