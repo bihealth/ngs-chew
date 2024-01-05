@@ -1,0 +1,6 @@
+/*.tbi
+.snakemake/*
+output/*
+raw_data/*
+work/*
+by_id/*

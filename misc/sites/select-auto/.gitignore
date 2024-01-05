@@ -1,0 +1,4 @@
+.snakemake/*
+output/*
+raw_data/*
+work/*

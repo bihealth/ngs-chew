@@ -66,11 +66,88 @@ def parse_samtools_idxstats(samtools_idxstats: str) -> typing.Tuple[float, float
         return chrx_count / total_count, chry_count / total_count
 
 
+def compute_chrx_het_hom(container):
+    chrx_fingerprint = container["chrx_fingerprint"]
+    chrx_mask = chrx_fingerprint[0]
+    chrx_is_alt = chrx_fingerprint[1]
+    chrx_hom_alt = chrx_fingerprint[2]
+    num_homs = np.count_nonzero(chrx_hom_alt & chrx_mask) + np.count_nonzero(
+        ~chrx_is_alt & chrx_mask
+    )
+    if num_homs > 0:
+        return np.count_nonzero(chrx_is_alt & chrx_mask) / num_homs
+    else:
+        return None
+
+
+def compute_autosomal_aafs(container):
+    autosomal_fingerprint = container["autosomal_fingerprint"]
+    autosomal_mask = autosomal_fingerprint[0]
+    autosomal_is_alt = autosomal_fingerprint[1]
+    autosomal_hom_alt = autosomal_fingerprint[2]
+    autosomal_aafs = container["autosomal_aafs"]
+    is_het = autosomal_mask & autosomal_is_alt & ~autosomal_hom_alt
+    sqrt_var_het = autosomal_aafs[is_het] - 0.5
+    return np.sum(sqrt_var_het * sqrt_var_het) / sqrt_var_het.shape[0]
+
+
+@attrs.frozen
+class SampleStats:
+    sample_name: str
+    release: str
+    hets: int
+    hom_alts: int
+    hom_refs: int
+    mask_ones: int
+    var_het: typing.Optional[float]
+    chrx_het_hom: typing.Optional[float]
+    chrx_frac: typing.Optional[float]
+    chry_frac: typing.Optional[float]
+
+
+def compute_sample_stats(container) -> SampleStats:
+    header = extract_header(container)
+
+    autosomal_fingerprint = container["autosomal_fingerprint"]
+    autosomal_mask = autosomal_fingerprint[0]
+    autosomal_is_alt = autosomal_fingerprint[1]
+    autosomal_hom_alt = autosomal_fingerprint[2]
+
+    if "autosomal_aafs" in header.fields:
+        var_het = compute_autosomal_aafs(container)
+    else:
+        var_het = None
+
+    if "chrx_aafs" in header.fields:
+        chrx_het_hom = compute_chrx_het_hom(container)
+    else:
+        chrx_het_hom = None
+
+    if "samtools_idxstats" in header.fields:
+        chrx_frac, chry_frac = parse_samtools_idxstats(str(container["samtools_idxstats"]))
+    else:
+        chrx_frac = None
+        chry_frac = None
+
+    return SampleStats(
+        sample_name=header.sample,
+        release=header.release,
+        hets=np.count_nonzero(autosomal_is_alt & autosomal_mask),
+        hom_alts=np.count_nonzero(autosomal_hom_alt & autosomal_mask),
+        hom_refs=np.count_nonzero(~autosomal_is_alt & autosomal_mask),
+        mask_ones=np.count_nonzero(autosomal_mask),
+        var_het=var_het,
+        chrx_het_hom=chrx_het_hom,
+        chrx_frac=chrx_frac,
+        chry_frac=chry_frac,
+    )
+
+
 def run(config: Config):
     logger.info("Writing statistics file...")
     with open(config.output, "wt") as outputf:
-        header_lines = [
-            "sample",
+        col_headers = [
+            "sample_name",
             "hets",
             "hom_alts",
             "hom_refs",
@@ -81,53 +158,15 @@ def run(config: Config):
             "chry_frac",
         ]
 
-        print("\t".join(header_lines), file=outputf)
+        print("\t".join(col_headers), file=outputf)
         for container in map(load_fingerprint_all, tqdm(config.fingerprints)):
-            header = extract_header(container)
+            stats = compute_sample_stats(container)
 
-            autosomal_fingerprint = container["autosomal_fingerprint"]
-            autosomal_mask = autosomal_fingerprint[0]
-            autosomal_is_alt = autosomal_fingerprint[1]
-            autosomal_hom_alt = autosomal_fingerprint[2]
-
-            if "autosomal_aafs" in header.fields:
-                autosomal_aafs = container["autosomal_aafs"]
-                is_het = autosomal_mask & autosomal_is_alt & ~autosomal_hom_alt
-                sqrt_var_het = autosomal_aafs[is_het] - 0.5
-                var_het = np.sum(sqrt_var_het * sqrt_var_het) / sqrt_var_het.shape[0]
-            else:
-                var_het = None
-
-            if "chrx_aafs" in header.fields:
-                chrx_fingerprint = container["chrx_fingerprint"]
-                chrx_mask = chrx_fingerprint[0]
-                chrx_is_alt = chrx_fingerprint[1]
-                chrx_hom_alt = chrx_fingerprint[2]
-                num_homs = np.count_nonzero(chrx_hom_alt & chrx_mask) + np.count_nonzero(
-                    ~chrx_is_alt & chrx_mask
-                )
-                if num_homs > 0:
-                    chrx_het_hom = np.count_nonzero(chrx_is_alt & chrx_mask) / num_homs
+            row = []
+            for key in col_headers:
+                if getattr(stats, key, None) is None:
+                    row.append("-")
                 else:
-                    chrx_het_hom = None
-            else:
-                chrx_het_hom = None
+                    getattr(stats, key)
 
-            if "samtools_idxstats" in header.fields:
-                chrx_frac, chry_frac = parse_samtools_idxstats(str(container["samtools_idxstats"]))
-            else:
-                chrx_frac = None
-                chry_frac = None
-
-            row = [
-                header.sample,
-                np.count_nonzero(autosomal_is_alt & autosomal_mask),
-                np.count_nonzero(autosomal_hom_alt & autosomal_mask),
-                np.count_nonzero(~autosomal_is_alt & autosomal_mask),
-                np.count_nonzero(autosomal_mask),
-                var_het or "-",
-                chrx_het_hom or "-",
-                chrx_frac or "-",
-                chry_frac or "-",
-            ]
             print("\t".join(map(str, row)), file=outputf)

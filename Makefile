@@ -1,6 +1,9 @@
 .PHONY: default
 default:
 
+.PHONY: format
+format: black isort
+
 .PHONY: black
 black:
 	black -l 100 .

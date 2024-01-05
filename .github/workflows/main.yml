@@ -102,3 +102,5 @@ jobs:
           pytest
           coverage report
         shell: bash -el {0}
+
+      - uses: codecov/codecov-action@v3
