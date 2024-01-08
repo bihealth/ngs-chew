@@ -35,7 +35,7 @@ BCFTOOLS_PILEUP = (
 )
 
 #: Template for creating ``bcftools call`` call.
-BCFTOOLS_CALL = r"bcftools call -c -Oz -o %(calls)s"
+BCFTOOLS_CALL = r"bcftools call --ploidy 2 -c -Oz -o %(calls)s"
 
 #: Template for creating ``samtools idxstats`` call.
 SAMTOOLS_IDXSTATS = r"samtools idxstats %(input_bam)s"
@@ -110,8 +110,18 @@ def analyze_bam_header(
             genome_release = "GRCh38"
             prefix = "chr"
         else:
-            raise Exception("")
+            raise InvalidInputWarning(
+                "Could not determine genome release from BAM file's header. "
+                "Please specify it using the --genome-release option."
+            )
         logger.info("Guessing genome release to be %s", genome_release)
+
+    if genome_release == "GRCh37":
+        prefix = ""
+    elif genome_release == "GRCh38":
+        prefix = "chr"
+    else:
+        raise InvalidInputWarning(f"Invalid genome release {genome_release}")
 
     return sample_name, prefix, genome_release
 
@@ -122,13 +132,19 @@ def write_sites_bed(args, prefix, sites_suffix, genome_release, tmp_dir):
     )
     path_bed = os.path.join(tmp_dir, "sites.bed")
     logger.info("Writing sites BED file to %s", path_bed)
-    # TODO: handle "chr" prefix...
+    arrs = []
     with gzip.open(path_gz, "rt") as inputf:
-        with open(path_bed, "wt") as outputf:
-            for lineno, line in enumerate(inputf):
-                if not args.max_sites or lineno < args.max_sites:
-                    print("%s%s" % (prefix, line.strip()), file=outputf)
+        for lineno, line in enumerate(inputf):
+            if not args.max_sites or lineno < args.max_sites:
+                arr = line.split("\t", 2)
+                arrs.append((f"{prefix}{arr[0]}", int(arr[1]), arr[2]))
+    arrs.sort()
+    with open(path_bed, "wt") as outputf:
+        for arr in arrs:
+            print("\t".join(map(str, arr)).strip(), file=outputf)
     logger.info("Wrote %s sites", "{:,}".format(lineno))
+    logger.info("  first = %s", "\t".join(map(str, arrs[0])).strip())
+    logger.info("  last  = %s", "\t".join(map(str, arrs[-1])).strip())
     return path_bed
 
 
@@ -179,7 +195,11 @@ def snps_step_call(
             for record in vcf_reader:
                 if prefix_fingerprint:
                     vcf_writer.write_record(record)
-                key = "%s%s:%s" % (chr_prefix, record.CHROM, record.POS)
+                if chr_prefix == "chr" and not record.CHROM.startswith("chr"):
+                    prefixed_chrom = f"chr{record.CHROM}"
+                else:
+                    prefixed_chrom = record.CHROM
+                key = f"{prefixed_chrom}:{record.POS}"
                 if key in sites:
                     call = record.call_for_sample[sample]
                     cov = sum(call.data["AD"])

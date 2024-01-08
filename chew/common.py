@@ -117,7 +117,7 @@ def pedigree_member_from_tsv(arr: typing.List[str]) -> PedigreeMember:
     )
 
 
-@attrs.frozen
+@attrs.frozen(order=True)
 class Site:
     chrom: str
     pos: int

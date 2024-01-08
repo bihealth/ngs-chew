@@ -33,14 +33,6 @@ class Config:
     output: str
 
 
-@attrs.frozen
-class Site:
-    chrom: str
-    pos: int
-    ref: str
-    alt: str
-
-
 def create_vcf_header(sample: str, release: str) -> vcfpy.Header:
     if release == "GRCh37":
         chrom_lens = CHROM_LENS_GRCH37
@@ -66,8 +58,12 @@ def write_vcf(tmpdir: str, sample: str, release: str, autosomal_fingerprint) -> 
     autosomal_is_alt = autosomal_fingerprint[1]
     autosomal_hom_alt = autosomal_fingerprint[2]
     path_vcf = os.path.join(tmpdir, "gts.vcf")
+    if release == "GRCh37":
+        prefix = ""
+    else:
+        prefix = "chr"
     with vcfpy.Writer.from_path(path_vcf, vcf_header) as writer:
-        for i, site in enumerate(sites):
+        for i, site in enumerate(sorted(sites)):
             if not autosomal_mask[i]:
                 gt = "./."
             elif autosomal_hom_alt[i]:
@@ -77,7 +73,7 @@ def write_vcf(tmpdir: str, sample: str, release: str, autosomal_fingerprint) -> 
             else:
                 gt = "0/0"
             record = vcfpy.Record(
-                CHROM=site.chrom,
+                CHROM=f"{prefix}{site.chrom}",
                 POS=site.pos,
                 ID=[],
                 REF="N",

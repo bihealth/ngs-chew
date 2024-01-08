@@ -1,3 +1,4 @@
+from functools import partial
 import typing
 
 import attrs
@@ -13,14 +14,19 @@ class Config:
     min_mask_ones: typing.Optional[int]
     max_mask_ones: typing.Optional[int]
     fingerprints: typing.List[str]
+    by_path: bool = False
 
 
-def load_fingerprint(path, *, load_aafs: bool = False):
+def load_fingerprint(by_path: bool, path, *, load_aafs: bool = False):
     nparr = np.load(path)
-    if load_aafs:
-        return nparr["header"][4], nparr["autosomal_fingerprint"], nparr.get("autosomal_aafs")
+    if by_path:
+        name = path
     else:
-        return nparr["header"][4], nparr["autosomal_fingerprint"]
+        name = nparr["header"][4]
+    if load_aafs:
+        return name, nparr["autosomal_fingerprint"], nparr.get("autosomal_aafs")
+    else:
+        return name, nparr["autosomal_fingerprint"]
 
 
 def load_fingerprint_with_aafs(path):
@@ -66,7 +72,10 @@ def relatedness(lhs, rhs):
 def run(config: Config):
     logger.info("Loading fingerprints...")
     fps = {
-        name: fingerprint for name, fingerprint in map(load_fingerprint, tqdm(config.fingerprints))
+        name: fingerprint
+        for name, fingerprint in map(
+            partial(load_fingerprint, config.by_path), tqdm(config.fingerprints)
+        )
     }
     logger.info("Loaded %d fingerprints", len(fps))
     if config.min_mask_ones or config.max_mask_ones:

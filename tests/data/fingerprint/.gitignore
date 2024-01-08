@@ -1,0 +1,8 @@
+*.aria2
+*.bed
+*.crai
+*.cram
+*.fa
+*.fa.fai
+
+HG00138.mapped.ILLUMINA.bwa.GBR.exome.20120522.bam.bai
