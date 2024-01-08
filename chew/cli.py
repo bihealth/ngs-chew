@@ -101,6 +101,7 @@ def cli_fingerprint(
 )
 @click.option("--min-mask-ones", type=int, help="Minimal number of ones in mask.")
 @click.option("--max-mask-ones", type=int, help="Maximal number of ones in mask.")
+@click.option("--by-path/--no-by-path", default=False, help="Use path as fingerprint name.")
 @click.argument("fingerprints", nargs=-1)
 @click.pass_context
 def cli_compare(
@@ -109,6 +110,7 @@ def cli_compare(
     min_mask_ones: typing.Optional[int],
     max_mask_ones: typing.Optional[int],
     fingerprints: typing.List[str],
+    by_path: bool,
 ):
     config = compare.Config(
         verbosity=2 if ctx.obj["verbose"] else 1,
@@ -116,6 +118,7 @@ def cli_compare(
         min_mask_ones=min_mask_ones,
         max_mask_ones=max_mask_ones,
         fingerprints=fingerprints,
+        by_path=by_path,
     )
     compare.run(config)
 

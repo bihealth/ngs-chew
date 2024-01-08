@@ -1,0 +1,4 @@
+name	tests/data/fingerprint/HG00138_WES_GRCh37.fingerprint.npz	tests/data/fingerprint/HG00138_WES_GRCh38.fingerprint.npz	tests/data/fingerprint/HG00138_WGS_GRCh38.fingerprint.npz
+tests/data/fingerprint/HG00138_WES_GRCh37.fingerprint.npz	0	0	0
+tests/data/fingerprint/HG00138_WES_GRCh38.fingerprint.npz	0	0	7
+tests/data/fingerprint/HG00138_WGS_GRCh38.fingerprint.npz	0	7	0

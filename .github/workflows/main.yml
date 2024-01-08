@@ -21,10 +21,11 @@ jobs:
   linting:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
+
 
       - name: Install Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: "3.8"
 
@@ -48,6 +49,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        slow:
+          - "slow"
+          - "not slow"
         python-version:
           - "3.8"
           - "3.9"
@@ -62,7 +66,7 @@ jobs:
           conda-channels: defaults,bioconda,conda-forge
 
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           lfs: true
 
@@ -80,7 +84,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest
+          pytest . -m "${{ matrix.slow }}"
           coverage report
 
       - uses: codecov/codecov-action@v3
