@@ -167,6 +167,6 @@ def run(config: Config):
                 if getattr(stats, key, None) is None:
                     row.append("-")
                 else:
-                    getattr(stats, key)
+                    row.append(getattr(stats, key))
 
             print("\t".join(map(str, row)), file=outputf)
