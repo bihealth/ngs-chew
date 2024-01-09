@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.9.0](https://www.github.com/bihealth/ngs-chew/compare/v0.8.1...v0.9.0) (2024-01-09)
+
+
+### Features
+
+* add "serve" command ([#24](https://www.github.com/bihealth/ngs-chew/issues/24)) ([#35](https://www.github.com/bihealth/ngs-chew/issues/35)) ([56f7078](https://www.github.com/bihealth/ngs-chew/commit/56f70788292a675ea5ee262ca344287d17fab94b))
+* tests with larger (excerpt) datasets ([#55](https://www.github.com/bihealth/ngs-chew/issues/55)) ([8ee5421](https://www.github.com/bihealth/ngs-chew/commit/8ee54218fe95f453a75cca391b0a6bd3ee75f627))
+* updating sites files for stable RSIDs ([#42](https://www.github.com/bihealth/ngs-chew/issues/42)) ([eaef39d](https://www.github.com/bihealth/ngs-chew/commit/eaef39dd1588939687f98d1daae8310ab344d62b))
+
+
+### Bug Fixes
+
+* Fills the stats line ([#57](https://www.github.com/bihealth/ngs-chew/issues/57)) ([f74bb70](https://www.github.com/bihealth/ngs-chew/commit/f74bb70cd1f54a42ce9187a053be4f9e228ae689))
+
+
+### Documentation
+
+* adding badges to README ([#52](https://www.github.com/bihealth/ngs-chew/issues/52)) ([68c5c82](https://www.github.com/bihealth/ngs-chew/commit/68c5c828b434c61454ae55c79b50160561a5c672))
+* adding sphinx-based documentation ([#51](https://www.github.com/bihealth/ngs-chew/issues/51)) ([18ab48b](https://www.github.com/bihealth/ngs-chew/commit/18ab48b3b4be4501a216383b42dc9ac85a1ce7c7))
+
 ### [0.8.1](https://www.github.com/bihealth/ngs-chew/compare/v0.8.0...v0.8.1) (2023-07-18)
 
 
