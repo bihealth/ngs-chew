@@ -7,9 +7,7 @@ import os
 
 from setuptools import find_packages, setup
 
-import versioneer
-
-__author__ = "Manuel Holtgrewe <manuel.holtgrewe@bihealth.de>"
+__author__ = "Manuel Holtgrewe <manuel.holtgrewe@bih-charite.de>"
 
 
 def parse_requirements(path):
@@ -43,6 +41,12 @@ def bash_scripts(names):
     return (os.path.join("scripts", name) for name in names)
 
 
+package_root = os.path.abspath(os.path.dirname(__file__))
+version = {}
+with open(os.path.join(package_root, "chew/_version.py")) as fp:
+    exec(fp.read(), version)
+version = version["__version__"]
+
 setup(
     author="Manuel Holtgrewe",
     author_email="manuel.holtgrewe@bih-charite.de",
@@ -53,10 +57,10 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
     ],
     description="NGS Chew",
     entry_points={"console_scripts": (("ngs-chew=chew.cli:cli",),)},
@@ -73,7 +77,6 @@ setup(
     package_dir={"chew": "chew"},
     test_suite="tests",
     url="https://github.com/bihealth/ngs-chew",
-    version=versioneer.get_version(),
-    cmdclass=versioneer.get_cmdclass(),
+    version=version,
     zip_safe=False,
 )

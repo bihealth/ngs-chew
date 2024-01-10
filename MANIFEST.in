@@ -1,5 +1,3 @@
-include versioneer.py
-include chew/_version.py
 include chew/data/*.bed.gz
 include *.rst
 include *.md
