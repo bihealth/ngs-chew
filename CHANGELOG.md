@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.9.1](https://www.github.com/bihealth/ngs-chew/compare/v0.9.0...v0.9.1) (2024-01-10)
+
+
+### Bug Fixes
+
+* remove versioneer (Python 3.12+) ([#58](https://www.github.com/bihealth/ngs-chew/issues/58)) ([0b3876e](https://www.github.com/bihealth/ngs-chew/commit/0b3876e598207ee992ea2cec311353e86a08fef2))
+
 ## [0.9.0](https://www.github.com/bihealth/ngs-chew/compare/v0.8.1...v0.9.0) (2024-01-09)
 
 
