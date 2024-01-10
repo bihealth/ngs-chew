@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.9.2](https://www.github.com/bihealth/ngs-chew/compare/v0.9.1...v0.9.2) (2024-01-10)
+
+
+### Bug Fixes
+
+* release-please action ([#60](https://www.github.com/bihealth/ngs-chew/issues/60)) ([718bd1d](https://www.github.com/bihealth/ngs-chew/commit/718bd1d5fa8f38d6e61e2495870e40fa4ff4f221))
+
 ### [0.9.1](https://www.github.com/bihealth/ngs-chew/compare/v0.9.0...v0.9.1) (2024-01-10)
 
 
