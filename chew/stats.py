@@ -77,7 +77,7 @@ def compute_chrx_het_hom(container):
     if num_homs > 0:
         return np.count_nonzero(chrx_is_alt & chrx_mask) / num_homs
     else:
-        return None
+        return 0
 
 
 def compute_autosomal_aafs(container):
