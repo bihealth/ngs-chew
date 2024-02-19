@@ -285,9 +285,9 @@ def write_fingerprint(
     np.savez_compressed(
         config.output_fingerprint,
         header=header,
-        autosomal_fingerprint=autosomal_fingerprint
-        if autosomal_fingerprint is not None
-        else np.zeros(0),
+        autosomal_fingerprint=(
+            autosomal_fingerprint if autosomal_fingerprint is not None else np.zeros(0)
+        ),
         autosomal_aafs=autosomal_aafs if autosomal_aafs is not None else np.zeros(0),
         chrx_fingerprint=chrx_fingerprint if chrx_fingerprint is not None else np.zeros(0),
         chrx_aafs=chrx_aafs if chrx_aafs is not None else np.zeros(0),
