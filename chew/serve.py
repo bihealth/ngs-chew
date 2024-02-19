@@ -1,6 +1,5 @@
 """Implementation of the serve command"""
 
-
 import csv
 import typing
 
