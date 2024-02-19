@@ -1,5 +1,13 @@
 # Changelog
 
+### [0.9.3](https://www.github.com/bihealth/ngs-chew/compare/v0.9.2...v0.9.3) (2024-02-19)
+
+
+### Bug Fixes
+
+* coercing chrX hom/het ratio from None to 0 ([#62](https://www.github.com/bihealth/ngs-chew/issues/62)) ([8aaf3ae](https://www.github.com/bihealth/ngs-chew/commit/8aaf3ae80834f91640e7b91b48533bb2cbd95444))
+* using previous chrX sites ([#64](https://www.github.com/bihealth/ngs-chew/issues/64)) ([#67](https://www.github.com/bihealth/ngs-chew/issues/67)) ([62990a7](https://www.github.com/bihealth/ngs-chew/commit/62990a7ff026e9ed4102ca79640b989a5e26b8f3))
+
 ### [0.9.2](https://www.github.com/bihealth/ngs-chew/compare/v0.9.1...v0.9.2) (2024-01-10)
 
 
