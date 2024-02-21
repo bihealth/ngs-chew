@@ -109,7 +109,7 @@ def compute_sample_stats(container) -> SampleStats:
     header = extract_header(container)
 
     autosomal_fingerprint = container["autosomal_fingerprint"]
-    if autosomal_fingerprint:
+    if autosomal_fingerprint is not None:
         autosomal_mask = autosomal_fingerprint[0]
         autosomal_is_alt = autosomal_fingerprint[1]
         autosomal_hom_alt = autosomal_fingerprint[2]
