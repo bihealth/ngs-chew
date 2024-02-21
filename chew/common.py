@@ -125,9 +125,11 @@ class Site:
     alt: str
 
 
-def load_sites(genome_release: str) -> typing.List[Site]:
+def load_sites(genome_release: str, sites_suffix: str) -> typing.List[Site]:
     logger.info("Loading sites .bed.gz for %s", genome_release)
-    path_gz = os.path.join(os.path.dirname(__file__), "data", f"{genome_release}_sites.bed.gz")
+    path_gz = os.path.join(
+        os.path.dirname(__file__), "data", f"{genome_release}_{sites_suffix}.bed.gz"
+    )
     result = []
     with gzip.open(path_gz, "rt") as inputf:
         for line in inputf:
