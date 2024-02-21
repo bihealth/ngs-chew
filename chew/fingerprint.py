@@ -346,7 +346,7 @@ def run(config: Config):
     else:
         samtools_idxstats_out = None
 
-    if config.step_bcftools_roh and autosomal_fingerprint:
+    if config.step_bcftools_roh and autosomal_fingerprint is not None:
         roh_txt_contents = bcftools_roh_step(
             sample=sample, release=genome_release, autosomal_fingerprint=autosomal_fingerprint
         )
