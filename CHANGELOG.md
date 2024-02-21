@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.9.4](https://www.github.com/bihealth/ngs-chew/compare/v0.9.3...v0.9.4) (2024-02-21)
+
+
+### Bug Fixes
+
+* issue with truthiness of numpy array ([#70](https://www.github.com/bihealth/ngs-chew/issues/70)) ([698d2a0](https://www.github.com/bihealth/ngs-chew/commit/698d2a0064833b973d22010c052652f830bf0586))
+
 ### [0.9.3](https://www.github.com/bihealth/ngs-chew/compare/v0.9.2...v0.9.3) (2024-02-19)
 
 
