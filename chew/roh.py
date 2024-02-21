@@ -53,7 +53,7 @@ def create_vcf_header(sample: str, release: str) -> vcfpy.Header:
 def write_vcf(tmpdir: str, sample: str, release: str, autosomal_fingerprint) -> str:
     logger.info("Constructing VCF header...")
     vcf_header = create_vcf_header(sample, release)
-    sites = load_sites(release)
+    sites = load_sites(release, "sites")
     autosomal_mask = autosomal_fingerprint[0]
     autosomal_is_alt = autosomal_fingerprint[1]
     autosomal_hom_alt = autosomal_fingerprint[2]

@@ -178,7 +178,7 @@ def snps_step_call(
     logger.info("Reading sites BED (%s)...", bed_file)
     sites = {
         "%s%s:%s" % (chr_prefix, site.chrom, site.pos): (0, 0, float("nan"))
-        for site in load_sites(genome_release)
+        for site in load_sites(genome_release, sites_suffix)
     }
     logger.info("Converting VCF to fingerprint...")
     with vcfpy.Reader.from_path(path_calls) as vcf_reader:
@@ -346,7 +346,7 @@ def run(config: Config):
     else:
         samtools_idxstats_out = None
 
-    if config.step_bcftools_roh:
+    if config.step_bcftools_roh and autosomal_fingerprint:
         roh_txt_contents = bcftools_roh_step(
             sample=sample, release=genome_release, autosomal_fingerprint=autosomal_fingerprint
         )

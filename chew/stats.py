@@ -109,9 +109,14 @@ def compute_sample_stats(container) -> SampleStats:
     header = extract_header(container)
 
     autosomal_fingerprint = container["autosomal_fingerprint"]
-    autosomal_mask = autosomal_fingerprint[0]
-    autosomal_is_alt = autosomal_fingerprint[1]
-    autosomal_hom_alt = autosomal_fingerprint[2]
+    if autosomal_fingerprint:
+        autosomal_mask = autosomal_fingerprint[0]
+        autosomal_is_alt = autosomal_fingerprint[1]
+        autosomal_hom_alt = autosomal_fingerprint[2]
+    else:
+        autosomal_mask = np.zeros(0, dtype=bool)
+        autosomal_is_alt = np.zeros(0, dtype=bool)
+        autosomal_hom_alt = np.zeros(0, dtype=bool)
 
     if "autosomal_aafs" in header.fields:
         var_het = compute_autosomal_aafs(container)
