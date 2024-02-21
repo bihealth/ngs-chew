@@ -25,7 +25,7 @@ def test_smoke_test_run_fingerprint(cli_runner, path_tests, tmpdir):
             "--input-bam",
             str(path_tests / "data" / "igsr.HG00102.TP73.bam"),
             "--output-fingerprint",
-            str(tmpdir / "out"),
+            str(tmpdir / "out.npz"),
         ],
     )
 
@@ -59,7 +59,7 @@ def test_smoke_test_run_fingerprint(cli_runner, path_tests, tmpdir):
 def test_fingerprint_bam_grch37(
     cli_runner: CliRunner, tmpdir: LocalPath, path_tests: Path, path_ref: str, path_bam: str
 ):
-    cli_runner.invoke(
+    result = cli_runner.invoke(
         cli,
         [
             "fingerprint",
@@ -68,9 +68,10 @@ def test_fingerprint_bam_grch37(
             "--input-bam",
             path_bam,
             "--output-fingerprint",
-            str(tmpdir / "out"),
+            str(tmpdir / "out.npz"),
         ],
     )
+    assert result.exit_code == 0, result
 
     # Check that output path exists and is similar to all finger prints.
     output = tmpdir / "out.npz"
