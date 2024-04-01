@@ -15,6 +15,10 @@ NGS chew can:
 - Compare such fingerprint files to others to detect sample swaps and cryptic relationships.
 - Analyze balance-enhanced fingerprint files for detecting cross-sample contamination.
 
+## Installation
+
+Make sure `samtools` and `bcftools` are installed.
+
 ## Quickstart
 
 The following will create a `sample.npz` fingerprint file from the given BAM file.
