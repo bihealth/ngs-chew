@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.9.5](https://www.github.com/bihealth/ngs-chew/compare/v0.9.4...v0.9.5) (2024-04-01)
+
+
+### Documentation
+
+* Add installation requirements for successfully running ngs-chew ([#74](https://www.github.com/bihealth/ngs-chew/issues/74)) ([5395d48](https://www.github.com/bihealth/ngs-chew/commit/5395d48a68160d728b7acfec933d701bb4b10e90))
+
 ### [0.9.4](https://www.github.com/bihealth/ngs-chew/compare/v0.9.3...v0.9.4) (2024-02-21)
 
 
