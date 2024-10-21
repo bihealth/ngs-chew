@@ -8,4 +8,4 @@ pytest-cov
 pytest-click
 pyfakefs >=3.7.1
 
-mypy ==1.12.0
+mypy ==1.12.1
